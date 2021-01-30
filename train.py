@@ -177,14 +177,14 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(model_path))
 
     # 定义损失函数等信息
-    lr = 1e-3
+    lr = 1e-4
     batch_size = 1
     epoch = 400
     width = 128
     height = 128
-    # criterion = loss_fun_2
-    # train(model, device, criterion, model_path, lr=lr, epoch=epoch, width=width, height=height)
-
-    lr = 1e-5
-    criterion = loss_fun_iou
+    criterion = loss_fun_2
     train(model, device, criterion, model_path, lr=lr, epoch=epoch, width=width, height=height)
+
+    # lr = 1e-5
+    # criterion = loss_fun_iou
+    # train(model, device, criterion, model_path, lr=lr, epoch=epoch, width=width, height=height)
