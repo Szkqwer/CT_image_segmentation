@@ -244,8 +244,8 @@ class UNet_3Plus(nn.Module):
         d1 = self.outconv1(hd1)  # d1->320*320*n_classes
 
         # 若使用crossentropyloss不要用sigmoid或者softmax loss自带softmax
-        # return d1
-        return F.sigmoid(d1)
+        return d1
+        # return F.sigmoid(d1)
 
 
 '''

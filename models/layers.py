@@ -50,7 +50,7 @@ class AttentionRes2Block(nn.Module):
         self.conv1 = nn.Conv2d(inplanes, width * scale, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(width * scale)
 
-        self.attention=AttentionBlock(inplanes, planes)
+        self.attention = AttentionBlock(inplanes, planes)
 
         if scale == 1:
             self.nums = 1
@@ -212,7 +212,6 @@ class Res2Block(nn.Module):
             inplanes: input channel dimensionality
             planes: output channel dimensionality
             stride: conv stride. Replaces pooling layer.
-            down_sample: None when stride = 1
             base_width: basic width of conv3x3
             scale: number of scale.
             stype: 'normal': normal set. 'stage': first block of a new stage.
@@ -311,7 +310,7 @@ class UnetConv2Res2x(nn.Module):
         p = padding
         if is_batchnorm:
             for i in range(1, n + 1):
-                conv = nn.Sequential(Res2XBlock(in_size, out_size, 26, 4),
+                conv = nn.Sequential(Res2XBlock(in_size, out_size, base_width=26, cardinality=4),
                                      nn.BatchNorm2d(out_size),
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
@@ -393,6 +392,7 @@ class UnetConv2Res2(nn.Module):
 
         return x
 
+
 # encoder加入res2和attention
 class UnetConv2AttentionRes2(nn.Module):
     def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
@@ -443,6 +443,7 @@ class UnetConv2AttentionRes2(nn.Module):
             x = F.relu(conv(x))
 
         return x
+
 
 # encoder加入res
 class UnetConv2Res(nn.Module):
