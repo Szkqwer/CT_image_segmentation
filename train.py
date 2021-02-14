@@ -127,7 +127,7 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
 
 
 # 使用分段函数训练
-def piecewise_train(input_model, input_device, model_path, batch_size=3, epoch=400, width=256, height=256):
+def step_train(input_model, input_device, model_path, batch_size=3, epoch=400, width=256, height=256):
     input_model = input_model.to(input_device)
     # 加载各模型数据
     if os.path.exists(model_path):
@@ -136,7 +136,7 @@ def piecewise_train(input_model, input_device, model_path, batch_size=3, epoch=4
     beta = 0.1
     # 第一步训练
     lr = 1e-3
-    gama_list = [1 / 2, 1 / 2, 0]
+    gama_list = [0.5, 0.5, 0]
     criterion = MixLoss(gama_list)
     input_model, beta = train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height, beta=beta)
 
@@ -224,7 +224,7 @@ if __name__ == '__main__':
     # res2加入attention
     model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     model_path = r'./checkpoints/DeepSup_AR2UNet3P.pth'
-    piecewise_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 定义损失函数等信息
     # lr = 1e-3
