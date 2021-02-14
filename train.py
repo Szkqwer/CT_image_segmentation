@@ -114,11 +114,11 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
         # print(loss)
 
         # 降低beta
-        if epoch % dec_epoch == dec_epoch - 1:
+        if train_round % dec_epoch == dec_epoch - 1:
             beta *= dec_rate
 
         # 保存模型
-        if epoch % save_epoch == save_epoch - 1:
+        if train_round % save_epoch == save_epoch - 1:
             torch.save(input_model.state_dict(), model_path)
             print('save model over')
         print('round train over')
