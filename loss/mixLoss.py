@@ -12,8 +12,8 @@ class MixLoss(torch.nn.Module):
         super(MixLoss, self).__init__()
         # 设置各种loss权重
         self.BCE_weight = gama_list[0]
-        self.MSSSIM_weight = gama_list[0]
-        self.IOU_weight = gama_list[0]
+        self.MSSSIM_weight = gama_list[1]
+        self.IOU_weight = gama_list[2]
 
         self.size_average = size_average
 

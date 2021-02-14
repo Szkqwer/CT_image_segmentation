@@ -1,15 +1,11 @@
 import os
-import torch.nn.functional as F
-import cv2
 import torch
 from torchsummary import summary
 from torch.utils.data import DataLoader
 
 from data_utils import CTDataset
-from loss.bceLoss import BCE_loss
-from loss.iouLoss import IOU_loss
 from loss.mixLoss import MixLoss
-from loss.msssimLoss import MSSSIM_loss
+
 from models.UNet3P_Series import UNet3P, DeepSup_CGM_UNet3P, DeepSup_UNet3P, DeepSup_ResUNet3P, DeepSup_Res2UNet3P, DeepSup_Res2XUNet3P, DeepSup_AR2UNet3P
 
 import numpy as np
@@ -68,13 +64,12 @@ def train_baseline(input_model, input_device, loss_fun, model_path, lr=5e-4, bat
 # 训练其他损失函数的改进unet3+
 def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3, epoch=400, width=256, height=256, beta=0.1):
     input_model = input_model.to(input_device)
-    # summary(model, (3,height,width))
 
     # 保存间隔轮数
     save_epoch = 40
 
     # 定义beta降低速度和轮数
-    dec_epoch = 100
+    dec_epoch = 50
     dec_rate = 0.9
 
     input_model.train()
@@ -131,10 +126,13 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
 # 使用分段函数训练
 def step_train(input_model, input_device, model_path, batch_size=3, epoch=400, width=256, height=256):
     input_model = input_model.to(input_device)
+    # summary(model, (3,height,width))
+
     # 加载各模型数据
     if os.path.exists(model_path):
         input_model.load_state_dict(torch.load(model_path))
 
+    # 初始化beta
     beta = 1
     # 第一步训练
     lr = 1e-3
@@ -148,9 +146,6 @@ def step_train(input_model, input_device, model_path, batch_size=3, epoch=400, w
     criterion = MixLoss(gama_list)
     input_model, beta = train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height, beta=beta)
     torch.save(input_model.state_dict(), model_path)
-
-
-
 
 
 if __name__ == '__main__':
