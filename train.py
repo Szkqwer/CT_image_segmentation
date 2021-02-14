@@ -9,8 +9,8 @@ from data_utils import CTDataset
 from loss.bceLoss import BCE_loss
 from loss.iouLoss import IOU_loss
 from loss.msssimLoss import MSSSIM_loss
-from models.UNet_3Plus import UNet_3Plus, UNet_3Plus_DeepSup_CGM, UNet_3Plus_DeepSup, UNet_3Plus_DeepSup_Res, UNet_3Plus_DeepSup_Res2, UNet_3Plus_DeepSup_Res2x, \
-    UNet_3Plus_DeepSup_Attention_Res2
+from models.UNet3P_Series import UNet3P, DeepSup_CGM_UNet3P, DeepSup_UNet3P, DeepSup_ResUNet3P, DeepSup_Res2UNet3P, DeepSup_Res2XUNet3P, \
+    DeepSup_AR2UNet3P
 import numpy as np
 
 
@@ -65,12 +65,16 @@ def train_baseline(input_model, input_device, loss_fun, model_path, lr=5e-4, bat
 
 
 # 训练其他损失函数的改进unet3+
-def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3, epoch=400, width=256, height=256):
-    # 加载各模型数据
-    if os.path.exists(model_path):
-        input_model.load_state_dict(torch.load(model_path))
+def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3, epoch=400, width=256, height=256, beta=0.1):
     input_model = input_model.to(input_device)
     # summary(model, (3,height,width))
+
+    # 保存间隔轮数
+    save_epoch = 10
+
+    # 定义beta降低速度和轮数
+    dec_epoch = 100
+    dec_rate = 0.9
 
     input_model.train()
     # 数据集
@@ -100,7 +104,7 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
             # 模型输出
             outputs = input_model(input_images)
             # 计算loss
-            loss = criterion(outputs, masks)
+            loss = criterion(outputs, masks, beta)
             # loss反向传播
             loss.backward()
             # 反向传播后参数更新
@@ -109,142 +113,118 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
         print('Epoch loss:', str(np.mean(all_loss)))
         # print(loss)
 
+        # 降低beta
+        if epoch % dec_epoch == dec_epoch - 1:
+            beta *= dec_rate
+
         # 保存模型
-        torch.save(input_model.state_dict(), model_path)
+        if epoch % save_epoch == save_epoch - 1:
+            torch.save(input_model.state_dict(), model_path)
+            print('save model over')
         print('round train over')
+        print('')
+    return input_model, beta
 
 
-# 训练3组
-def train_step3(input_model, input_device, model_path, batch_size=3, epoch=400, width=256, height=256):
+# 使用分段函数训练
+def piecewise_train(input_model, input_device, model_path, batch_size=3, epoch=400, width=256, height=256):
     input_model = input_model.to(input_device)
+    # 加载各模型数据
+    if os.path.exists(model_path):
+        input_model.load_state_dict(torch.load(model_path))
+
+    beta = 0.1
     # 第一步训练
     lr = 1e-3
-    criterion = loss_fun_2_dec
-    train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    gama_list = [1 / 2, 1 / 2, 0]
+    criterion = MixLoss(gama_list)
+    input_model, beta = train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height, beta=beta)
 
     # 第二步训练
-    lr = 1e-4
-    criterion = loss_fun_2_dec
-    train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height)
-
-    # 第三步训练
-    lr = 1e-5
-    criterion = loss_fun_iou_dec
-    train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    lr = 1e-7
+    gama_list = [0, 0, 1]
+    criterion = MixLoss(gama_list)
+    input_model, beta = train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height, beta=beta)
+    torch.save(input_model.state_dict(), model_path)
 
 
-# 原始loss递减
-def loss_fun_dec(pred_all, label):
-    loss = 0
-    alpha = 0.9
-    for pred in pred_all:
-        loss += (IOU_loss(pred, label) + BCE_loss(pred, label) + MSSSIM_loss(pred, label)) * alpha
-        alpha *= 0.1
-    return loss
+# 深监督分支递减权重混合loss，beta为递减率
+class MixLoss(torch.nn.Module):
 
+    def __init__(self, gama_list, size_average=True):
+        super(MixLoss, self).__init__()
+        # 设置各种loss权重
+        self.BCE_weight = gama_list[0]
+        self.MSSSIM_weight = gama_list[0]
+        self.IOU_weight = gama_list[0]
 
-# 原始loss平均
-def loss_fun_avg(pred_all, label):
-    loss = 0
+        self.size_average = size_average
 
-    for pred in pred_all:
-        loss += IOU_loss(pred, label) + BCE_loss(pred, label) + MSSSIM_loss(pred, label)
+    def forward(self, pred_all, label, beta):
+        # 总损失
+        loss = 0
+        # 分支权重
+        branch_weight = 1
+        # 权重和
+        sum_weight = 0
 
-    return loss / len(pred_all)
+        for pred in pred_all:
+            loss += (self.BCE_weight * BCE_loss(pred, label) + self.MSSSIM_weight * MSSSIM_loss(pred, label) + self.IOU_weight * IOU_loss(pred, label)) * branch_weight
+            sum_weight += branch_weight
 
+            # 分支权重递减
+            branch_weight *= beta
 
-# iou loss递减
-def loss_fun_iou_dec(pred_all, label):
-    loss = 0
-    alpha = 0.9
-    for pred in pred_all:
-        loss += IOU_loss(pred, label) * alpha
-        alpha *= 0.1
-
-    return loss
-
-
-# iou loss平均
-def loss_fun_iou_avg(pred_all, label):
-    loss = 0
-
-    for pred in pred_all:
-        # loss += IOU_loss(pred, label) + BCE_loss(pred, label) + MSSSIM_loss(pred, label)
-        # loss += BCE_loss(pred, label) + MSSSIM_loss(pred, label)
-        loss += IOU_loss(pred, label)
-
-    return loss / len(pred_all)
-
-
-# bce+MSSSIM递减
-def loss_fun_2_dec(pred_all, label):
-    loss = 0
-    alpha = 0.9
-    for pred in pred_all:
-        loss += (BCE_loss(pred, label) + MSSSIM_loss(pred, label)) * alpha
-        alpha *= 0.1
-
-    return loss
-
-
-# bce+MSSSIM平均
-def loss_fun_2_avg(pred_all, label):
-    loss = 0
-
-    for pred in pred_all:
-        # loss += IOU_loss(pred, label) + BCE_loss(pred, label) + MSSSIM_loss(pred, label)
-        loss += BCE_loss(pred, label) + MSSSIM_loss(pred, label)
-        # loss+=IOU_loss(pred, label)
-
-    return loss / len(pred_all)
+        loss /= sum_weight
+        return loss
 
 
 if __name__ == '__main__':
     # 定义基本数据
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 只能单GPU运行
-    lr = 1e-3
+    # lr = 1e-3
     batch_size = 1
     epoch = 400
     width = 256
     height = 256
 
     # 基本unet3+使用交叉熵作为损失函数
-    model_CELoss = UNet_3Plus(in_channels=3, n_classes=2, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    CELoss_model_path = r'./checkpoints/model_CELoss.pth'
-    criterion = torch.nn.CrossEntropyLoss()
-    train_baseline(model_CELoss, device, criterion, CELoss_model_path, lr=lr, batch_size=batch_size, epoch=epoch*3, width=width, height=height)
+    # model_CELoss = UNet3P(in_channels=3, n_classes=2, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # CELoss_model_path = r'./checkpoints/UNet3P_CELoss.pth'
+    # criterion = torch.nn.CrossEntropyLoss()
+    # train_baseline(model_CELoss, device, criterion, CELoss_model_path, lr=lr, batch_size=batch_size, epoch=epoch*3, width=width, height=height)
 
     # 使用论文loss和模型
     # cgm
-    model = UNet_3Plus_DeepSup_CGM(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_CGM_model.pth'
-    train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # model = DeepSup_CGM_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'./checkpoints/DeepSup_CGM_UNet3P.pth'
+    # train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # dsp
-    model = UNet_3Plus_DeepSup(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_model.pth'
-    train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # model = DeepSup_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'./checkpoints/DeepSup_UNet3P.pth'
+    # train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用自定义模型
     # res
-    model = UNet_3Plus_DeepSup_Res(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_Res_model.pth'
-    train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
-
-    # res2
-    model = UNet_3Plus_DeepSup_Res2(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_Res2_model.pth'
-    train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
-
-    # res2next
-    model = UNet_3Plus_DeepSup_Res2x(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_Res2x_model.pth'
-    train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
+    # train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    #
+    # # res2
+    # model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
+    # train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    #
+    # # res2next
+    # model = DeepSup_Res2XUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'./checkpoints/DeepSup_Res2xUNet3P.pth'
+    # train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # res2加入attention
-    model = UNet_3Plus_DeepSup_Attention_Res2(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_Attention_Res2_model.pth'
-    train_step3(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'./checkpoints/DeepSup_AR2UNet3P.pth'
+    piecewise_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 定义损失函数等信息
     # lr = 1e-3

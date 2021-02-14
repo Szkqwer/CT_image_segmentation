@@ -12,6 +12,8 @@ class AttentionBlock(nn.Module):
         super(AttentionBlock, self).__init__()
         self.attention = nn.Sequential(
             nn.Conv2d(in_size, in_size, 3, 1, 1),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Upsample(scale_factor=2, mode='bilinear'),
             nn.Conv2d(in_size, out_size, 3, 1, 1),
             nn.Softmax()
         )
@@ -22,7 +24,7 @@ class AttentionBlock(nn.Module):
 
 
 # res2net加入attention
-class AttentionRes2Block(nn.Module):
+class AR2Block(nn.Module):
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, base_width=26, scale=4, stype='normal'):
@@ -37,7 +39,7 @@ class AttentionRes2Block(nn.Module):
             stype: 'normal': normal set. 'stage': first block of a new stage.
         """
 
-        super(AttentionRes2Block, self).__init__()
+        super(AR2Block, self).__init__()
         down_sample = None
         if stride != 1 or inplanes != planes * self.expansion:
             down_sample = nn.Sequential(
@@ -414,7 +416,7 @@ class UnetConv2AttentionRes2(nn.Module):
         p = padding
         if is_batchnorm:
             for i in range(1, n + 1):
-                conv = nn.Sequential(AttentionRes2Block(in_size, out_size),
+                conv = nn.Sequential(AR2Block(in_size, out_size),
                                      nn.BatchNorm2d(out_size),
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
@@ -427,7 +429,7 @@ class UnetConv2AttentionRes2(nn.Module):
 
         else:
             for i in range(1, n + 1):
-                conv = nn.Sequential(AttentionRes2Block(in_size, out_size),
+                conv = nn.Sequential(AR2Block(in_size, out_size),
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
                 in_size = out_size
