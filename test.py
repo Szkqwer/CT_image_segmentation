@@ -219,11 +219,34 @@ import torch
 
 
 
-s=""
-a=int(input("请输入字符串："))
-for p in a:
-    s=p+s
-print(s)
+import SimpleITK as sitk
+import cv2
+import numpy as np
+import os
+import glob
+
+img = []
+img1 = cv2.imread('1.png',0)
+img1 = np.array(img1)
+img.append(img1)
+
+width = img1.shape[1]
+height = img1.shape[0]
+
+img_path = glob.glob(r'./*.png')#512_496_482是存放png图片的地址，有很多张二维图片
+chanel = len(img_path)
+
+img_resize = np.zeros([chanel,height,width],dtype=np.uint8)
+
+for i in range(chanel):
+    print(i)
+    img = cv2.imread(img_path[i])
+    img_resize[i,(height- img1.shape[0]) // 2:(height - img1.shape[0]) // 2 + img1.shape[0],
+    (width - img1.shape[1]) // 2:(width - img1.shape[1]) // 2 + img1.shape[1]] = img
+
+img_resize=np.reshape(img_resize,[chanel,height, width])
+mhd_data = sitk.GetImageFromArray(img_resize)
+sitk.WriteImage(mhd_data, "1.mhd")
 
 
 

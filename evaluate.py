@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import torch
 
-from models.UNet3P_Series import UNet3P, DeepSup_UNet3P, DeepSup_ResUNet3P
+from models.UNet3P_Series import UNet3P, DeepSup_UNet3P, DeepSup_ResUNet3P, DeepSup_AR2UNet3P, DeepSup_Res2UNet3P
 
 
 # 计算dice
@@ -83,6 +83,8 @@ def evaluate_model(model, device, image_root, result_root, label_root, width=256
     input_img_list = os.listdir(image_root)
     mask_img_list = os.listdir(label_root)
     all_score = []
+    all_dice = []
+    all_mPA = []
     # 遍历所有测试图片
     for input_img_index in range(0, len(input_img_list)):
 
@@ -108,23 +110,30 @@ def evaluate_model(model, device, image_root, result_root, label_root, width=256
             disease_place = (result > 0.5).all(axis=2)
 
             # 设置颜色
-            result[disease_place] = 255
             result[~disease_place] = 0
-            # result[label_disease] = 127
+            result[disease_place] += 127
+
+            result[label_disease] += 63
 
             # 计算主分支评分
             if output_index == 0:
-                score = calculate_score(disease_place, label_disease)
+                dice = calculate_dice(disease_place, label_disease)
+                mPA = calculate_mPA(disease_place, label_disease)
+                score = (dice+mPA)/2
+                all_dice.append(dice)
+                all_mPA.append(mPA)
                 all_score.append(score)
 
             result_img = cv2.cvtColor(result.astype(np.uint8), cv2.COLOR_GRAY2BGR)
             cv2.imwrite(result_root + '/result_' + str(output_index) + '_' + input_img_list[input_img_index], result_img.astype(np.uint8))
 
     # 在测试集上的平均评分
+    mean_dice = sum(all_dice) / len(all_dice)
+    mean_mPA = sum(all_mPA) / len(all_mPA)
     mean_score = sum(all_score) / len(all_score)
-    print(mean_score)
-
-
+    print(mean_dice, mean_mPA, mean_score)
+# 0.514780701314058 0.7090536218407361 0.6119171615773968
+# 0.6319317774189223 0.7619652029576374 0.6969484901882798
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -141,11 +150,15 @@ if __name__ == '__main__':
     # evaluate_model(model, device, image_root, result_root)
 
     # 使用自定义模型
-    model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
+    # model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
+
+    model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
     if os.path.exists(model_path):
         model.load_state_dict(torch.load(model_path))
         print('load model over')
     width = 256
     height = 256
     evaluate_model(model, device, image_root, result_root, label_root=label_root, width=width, height=height)
+

@@ -107,14 +107,12 @@ class CTDataset(Dataset):
         input_img = cv2.imread(self.input_list[index])
         input_img = cv2.resize(input_img, (self.width, self.height))
 
-
-
         # label
         mask_img = cv2.imread(self.mask_list[index])
         mask_img = cv2.resize(mask_img, (self.width, self.height))
 
         # 数据增强
-        input_img,mask_img=data_enhance(input_img, mask_img)
+        input_img, mask_img = data_enhance(input_img, mask_img)
 
         if self.is_use_CEL:
             label_img = cv2.cvtColor(mask_img, cv2.COLOR_BGR2GRAY) / 255.0
