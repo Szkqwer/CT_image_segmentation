@@ -134,8 +134,14 @@ def evaluate_model(model, device, image_root, result_root, label_root, width=256
     print(mean_dice, mean_mPA, mean_score)
 # 0.514780701314058 0.7090536218407361 0.6119171615773968
 # 0.6319317774189223 0.7619652029576374 0.6969484901882798
+
+# 0.0273972602739726 0.5074626865671642 0.2674299734205684
+
+
+
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cpu")
 
     # image_root=r'./test_images'
     image_root = r'F:/dataset/medical/thrombus/image/chenxianhong-right'
@@ -153,8 +159,8 @@ if __name__ == '__main__':
     # model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
 
-    model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
+    model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
     if os.path.exists(model_path):
         model.load_state_dict(torch.load(model_path))
         print('load model over')

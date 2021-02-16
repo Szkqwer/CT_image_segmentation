@@ -12,10 +12,14 @@ class AttentionBlock(nn.Module):
         super(AttentionBlock, self).__init__()
         self.attention = nn.Sequential(
             nn.Conv2d(in_size, in_size, 3, 1, 1),
+            nn.BatchNorm2d(in_size),
+            nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),
             nn.Upsample(scale_factor=2, mode='bilinear'),
             nn.Conv2d(in_size, out_size, 3, 1, 1),
-            nn.Softmax()
+            nn.BatchNorm2d(out_size),
+            nn.ReLU(inplace=True),
+            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
@@ -104,7 +108,7 @@ class AR2Block(nn.Module):
 
         out = self.conv3(out)
         out = self.bn3(out)
-        out = out * attention
+        out = out *(1+attention)
         if self.down_sample is not None:
             residual = self.down_sample(x)
 

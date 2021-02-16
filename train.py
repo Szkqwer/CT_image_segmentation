@@ -92,8 +92,6 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
             masks = torch.tensor(masks, dtype=torch.float)
             masks = masks.to(input_device)
 
-
-
             # 梯度置零
             optimizer.zero_grad()
             # 模型输出
@@ -142,12 +140,13 @@ def step_train(input_model, input_device, model_path, batch_size=3, epoch=400, w
         print('load model over')
 
     # 初始化beta
-    beta = 0.1
+    beta = 1
     # 定义beta降低速度和轮数
-    dec_epoch = 50
-    dec_rate = 1
+    dec_epoch = 10
+    dec_rate = 0.99
     # 保存间隔轮数
     save_epoch = 1
+
     # 第一步训练
     lr = 1e-4
     gama_list = [0.5, 0.5, 0]
@@ -156,11 +155,11 @@ def step_train(input_model, input_device, model_path, batch_size=3, epoch=400, w
                               dec_epoch=dec_epoch, dec_rate=dec_rate, save_epoch=save_epoch)
 
     # 第二步训练
-    # lr = 1e-5
-    # gama_list = [0, 0, 1]
-    # criterion = MixLoss(gama_list)
-    # input_model, beta = train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height, beta=beta,
-    #                           dec_epoch=dec_epoch, dec_rate=dec_rate,save_epoch=save_epoch)
+    lr = 1e-5
+    gama_list = [0, 0, 1]
+    criterion = MixLoss(gama_list)
+    input_model, beta = train(input_model, input_device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height, beta=beta,
+                              dec_epoch=dec_epoch, dec_rate=dec_rate, save_epoch=save_epoch)
 
     # 最终保存
     torch.save(input_model.state_dict(), model_path)
@@ -211,7 +210,7 @@ if __name__ == '__main__':
 
     # res2加入attention
     model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_AR2UNet3P.pth'
+    model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
     step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 定义损失函数等信息

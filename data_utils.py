@@ -72,7 +72,7 @@ def data_enhance(input_img, label_img):
     new_label = rotate_img(label_img, degree)
 
     # 随机加噪声
-    prob = 0.15
+    prob = 0.1
     new_img = add_noise(new_img, prob)
 
     return new_img, new_label
