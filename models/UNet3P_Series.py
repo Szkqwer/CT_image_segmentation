@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.layers import UnetConv2, UnetConv2Res, UnetConv2Res2, UnetConv2Res2x, UnetConv2AttentionRes2
+from models.layers import UnetConv2, UnetConv2Res, UnetConv2Res2, UnetConv2Res2x, UnetConv2AR2
 from models.init_weights import init_weights
 import numpy as np
 
@@ -1304,19 +1304,19 @@ class DeepSup_AR2UNet3P(nn.Module):
         filters = [64, 128, 256, 512, 1024]
 
         ## -------------Encoder--------------
-        self.conv1 = UnetConv2AttentionRes2(self.in_channels, filters[0], self.is_batchnorm)
+        self.conv1 = UnetConv2AR2(self.in_channels, filters[0], self.is_batchnorm)
         self.maxpool1 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv2 = UnetConv2AttentionRes2(filters[0], filters[1], self.is_batchnorm)
+        self.conv2 = UnetConv2AR2(filters[0], filters[1], self.is_batchnorm)
         self.maxpool2 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv3 = UnetConv2AttentionRes2(filters[1], filters[2], self.is_batchnorm)
+        self.conv3 = UnetConv2AR2(filters[1], filters[2], self.is_batchnorm)
         self.maxpool3 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv4 = UnetConv2AttentionRes2(filters[2], filters[3], self.is_batchnorm)
+        self.conv4 = UnetConv2AR2(filters[2], filters[3], self.is_batchnorm)
         self.maxpool4 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv5 = UnetConv2AttentionRes2(filters[3], filters[4], self.is_batchnorm)
+        self.conv5 = UnetConv2AR2(filters[3], filters[4], self.is_batchnorm)
 
         ## -------------Decoder--------------
         self.CatChannels = filters[0]

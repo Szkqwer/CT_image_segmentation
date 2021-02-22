@@ -400,7 +400,7 @@ class UnetConv2Res2(nn.Module):
 
 
 # encoder加入res2和attention
-class UnetConv2AttentionRes2(nn.Module):
+class UnetConv2AR2(nn.Module):
     def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
         """
         :param in_size:输入channel
@@ -411,7 +411,7 @@ class UnetConv2AttentionRes2(nn.Module):
         :param stride:步长
         :param padding:填充
         """
-        super(UnetConv2AttentionRes2, self).__init__()
+        super(UnetConv2AR2, self).__init__()
         self.n = n
         self.ks = ks
         self.stride = stride
@@ -477,7 +477,7 @@ class UnetConv2Res(nn.Module):
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
 
-                res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
+                res = nn.Sequential(nn.Conv2d(in_size, out_size, 1))
 
                 setattr(self, 'res%d' % i, res)
 
@@ -489,7 +489,7 @@ class UnetConv2Res(nn.Module):
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
 
-                res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
+                res = nn.Sequential(nn.Conv2d(in_size, out_size, 1))
 
                 setattr(self, 'res%d' % i, res)
 

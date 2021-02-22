@@ -27,7 +27,7 @@ def write_root_thrombus(picture_root, mask_root, train_csv_root, test_csv_root):
     f_test = open(test_csv_root, 'w')
     for i in range(0, len(gt_root_list)):
         str_w = p_root_list[i] + ',' + gt_root_list[i] + '\n'
-        if i % 10 == 8:
+        if i % 10 == 7:
             f_test.write(str_w)
         else:
             f_train.write(str_w)
@@ -153,7 +153,7 @@ class CTDataset(Dataset):
         mask_img = cv2.resize(mask_img, (self.width, self.height))
 
         # 数据增强
-        # input_img, mask_img = data_enhance(input_img, mask_img)
+        input_img, mask_img = data_enhance(input_img, mask_img)
 
         # 标签类型判定
         if mask_img.max()==255:
