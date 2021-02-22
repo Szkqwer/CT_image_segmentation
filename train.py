@@ -125,10 +125,10 @@ def train(input_model, input_device, loss_fun, model_path, csv_path, lr=1e-3, ba
 
 
 # 使用分段函数训练
-def step_train(input_model, input_device, model_path, batch_size=3, epoch=400, width=256, height=256):
+def step_train(input_model, input_device, model_path, csv_path, batch_size=3, epoch=400, width=256, height=256):
     input_model = input_model.to(input_device)
     # summary(model, (3,height,width))
-    csv_path = r'./csv_data/thrombus_train_data.csv'
+
     # 加载各模型数据
     if os.path.exists(model_path):
         input_model.load_state_dict(torch.load(model_path))
@@ -164,8 +164,7 @@ def step_train(input_model, input_device, model_path, batch_size=3, epoch=400, w
 if __name__ == '__main__':
     # 定义基本数据
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 只能单GPU运行
-    # lr = 1e-3
-    # batch_size = 1
+    csv_path = r'./csv_data/thrombus_train_data.csv'
     epoch = 400
     width = 256
     height = 256
@@ -174,36 +173,36 @@ if __name__ == '__main__':
     # batch_size = 3
     # model = UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'checkpoints/UNet3P.pth'
-    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用论文loss和模型
     # cgm
     # batch_size = 3
     # model = DeepSup_CGM_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_CGM_UNet3P.pth'
-    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # dsp
     # batch_size = 3
     # model = DeepSup_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_UNet3P.pth'
-    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用自定义模型
     # res
-    batch_size = 3
-    model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
-    step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # batch_size = 3
+    # model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
+    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # res2
-    # batch_size = 2
-    # model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
-    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    batch_size = 2
+    model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
+    step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # AR2UNet3P
     # batch_size = 1
     # model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
-    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)

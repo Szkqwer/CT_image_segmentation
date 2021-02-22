@@ -27,7 +27,7 @@ class AttentionBlock(nn.Module):
         return out
 
 
-# res2net加入attention
+# AR2块
 class AR2Block(nn.Module):
     expansion = 1
 
@@ -108,7 +108,7 @@ class AR2Block(nn.Module):
 
         out = self.conv3(out)
         out = self.bn3(out)
-        out = out *(1+attention)
+        out = out * (1 + attention)
         if self.down_sample is not None:
             residual = self.down_sample(x)
 
@@ -295,162 +295,6 @@ class Res2Block(nn.Module):
         return out
 
 
-# encoder加入res2x
-class UnetConv2Res2x(nn.Module):
-    def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
-        """
-        :param in_size:输入channel
-        :param out_size:输出channel
-        :param is_batchnorm:是否使用batchnorm
-        :param n:卷积次数
-        :param ks: 卷积核长度
-        :param stride:步长
-        :param padding:填充
-        """
-        super(UnetConv2Res2x, self).__init__()
-        self.n = n
-        self.ks = ks
-        self.stride = stride
-        self.padding = padding
-        s = stride
-        p = padding
-        if is_batchnorm:
-            for i in range(1, n + 1):
-                conv = nn.Sequential(Res2XBlock(in_size, out_size, base_width=26, cardinality=4),
-                                     nn.BatchNorm2d(out_size),
-                                     nn.ReLU(inplace=True), )
-                setattr(self, 'conv%d' % i, conv)
-
-                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
-                #
-                # setattr(self, 'res%d' % i, res)
-
-                in_size = out_size
-
-        else:
-            for i in range(1, n + 1):
-                conv = nn.Sequential(Res2XBlock(in_size, out_size, 26, 4),
-                                     nn.ReLU(inplace=True), )
-                setattr(self, 'conv%d' % i, conv)
-                in_size = out_size
-
-        # initialise the blocks
-        for m in self.children():
-            init_weights(m, init_type='kaiming')
-
-    def forward(self, inputs):
-        x = inputs
-        for i in range(1, self.n + 1):
-            conv = getattr(self, 'conv%d' % i)
-            x = F.relu(conv(x))
-
-        return x
-
-
-# encoder加入res2
-class UnetConv2Res2(nn.Module):
-    def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
-        """
-        :param in_size:输入channel
-        :param out_size:输出channel
-        :param is_batchnorm:是否使用batchnorm
-        :param n:卷积次数
-        :param ks: 卷积核长度
-        :param stride:步长
-        :param padding:填充
-        """
-        super(UnetConv2Res2, self).__init__()
-        self.n = n
-        self.ks = ks
-        self.stride = stride
-        self.padding = padding
-        s = stride
-        p = padding
-        if is_batchnorm:
-            for i in range(1, n + 1):
-                conv = nn.Sequential(Res2Block(in_size, out_size),
-                                     nn.BatchNorm2d(out_size),
-                                     nn.ReLU(inplace=True), )
-                setattr(self, 'conv%d' % i, conv)
-
-                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
-                #
-                # setattr(self, 'res%d' % i, res)
-
-                in_size = out_size
-
-        else:
-            for i in range(1, n + 1):
-                conv = nn.Sequential(Res2Block(in_size, out_size),
-                                     nn.ReLU(inplace=True), )
-                setattr(self, 'conv%d' % i, conv)
-                in_size = out_size
-
-        # initialise the blocks
-        for m in self.children():
-            init_weights(m, init_type='kaiming')
-
-    def forward(self, inputs):
-        x = inputs
-        for i in range(1, self.n + 1):
-            conv = getattr(self, 'conv%d' % i)
-            x = F.relu(conv(x))
-
-        return x
-
-
-# encoder加入res2和attention
-class UnetConv2AR2(nn.Module):
-    def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
-        """
-        :param in_size:输入channel
-        :param out_size:输出channel
-        :param is_batchnorm:是否使用batchnorm
-        :param n:卷积次数
-        :param ks: 卷积核长度
-        :param stride:步长
-        :param padding:填充
-        """
-        super(UnetConv2AR2, self).__init__()
-        self.n = n
-        self.ks = ks
-        self.stride = stride
-        self.padding = padding
-        s = stride
-        p = padding
-        if is_batchnorm:
-            for i in range(1, n + 1):
-                conv = nn.Sequential(AR2Block(in_size, out_size),
-                                     nn.BatchNorm2d(out_size),
-                                     nn.ReLU(inplace=True), )
-                setattr(self, 'conv%d' % i, conv)
-
-                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
-                #
-                # setattr(self, 'res%d' % i, res)
-
-                in_size = out_size
-
-        else:
-            for i in range(1, n + 1):
-                conv = nn.Sequential(AR2Block(in_size, out_size),
-                                     nn.ReLU(inplace=True), )
-                setattr(self, 'conv%d' % i, conv)
-                in_size = out_size
-
-        # initialise the blocks
-        for m in self.children():
-            init_weights(m, init_type='kaiming')
-
-    def forward(self, inputs):
-        x = inputs
-        for i in range(1, self.n + 1):
-            conv = getattr(self, 'conv%d' % i)
-            x = F.relu(conv(x))
-
-        return x
-
-
 # encoder加入res
 class UnetConv2Res(nn.Module):
     def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
@@ -506,6 +350,158 @@ class UnetConv2Res(nn.Module):
             res = getattr(self, 'res%d' % i)
 
             x = F.relu(conv(x) + res(x))
+
+        return x
+
+
+# encoder加入res2x
+class UnetConv2Res2x(nn.Module):
+    def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
+        """
+        :param in_size:输入channel
+        :param out_size:输出channel
+        :param is_batchnorm:是否使用batchnorm
+        :param n:卷积次数
+        :param ks: 卷积核长度
+        :param stride:步长
+        :param padding:填充
+        """
+        super(UnetConv2Res2x, self).__init__()
+        self.n = n
+        self.ks = ks
+        self.stride = stride
+        self.padding = padding
+        if is_batchnorm:
+            for i in range(1, n + 1):
+                conv = nn.Sequential(Res2XBlock(in_size, out_size, base_width=26, cardinality=4),
+                                     nn.BatchNorm2d(out_size),
+                                     nn.ReLU(inplace=True), )
+                setattr(self, 'conv%d' % i, conv)
+
+                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
+                #
+                # setattr(self, 'res%d' % i, res)
+
+                in_size = out_size
+
+        else:
+            for i in range(1, n + 1):
+                conv = nn.Sequential(Res2XBlock(in_size, out_size, 26, 4),
+                                     nn.ReLU(inplace=True), )
+                setattr(self, 'conv%d' % i, conv)
+                in_size = out_size
+
+        # initialise the blocks
+        for m in self.children():
+            init_weights(m, init_type='kaiming')
+
+    def forward(self, inputs):
+        x = inputs
+        for i in range(1, self.n + 1):
+            conv = getattr(self, 'conv%d' % i)
+            x = F.relu(conv(x))
+
+        return x
+
+
+# encoder加入res2
+class UnetConv2Res2(nn.Module):
+    def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
+        """
+        :param in_size:输入channel
+        :param out_size:输出channel
+        :param is_batchnorm:是否使用batchnorm
+        :param n:卷积次数
+        :param ks: 卷积核长度
+        :param stride:步长
+        :param padding:填充
+        """
+        super(UnetConv2Res2, self).__init__()
+        self.n = n
+        self.ks = ks
+        self.stride = stride
+        self.padding = padding
+        if is_batchnorm:
+            for i in range(1, n + 1):
+                conv = nn.Sequential(Res2Block(in_size, out_size),
+                                     nn.BatchNorm2d(out_size),
+                                     nn.ReLU(inplace=True), )
+                setattr(self, 'conv%d' % i, conv)
+
+                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
+                #
+                # setattr(self, 'res%d' % i, res)
+
+                in_size = out_size
+
+        else:
+            for i in range(1, n + 1):
+                conv = nn.Sequential(Res2Block(in_size, out_size),
+                                     nn.ReLU(inplace=True), )
+                setattr(self, 'conv%d' % i, conv)
+                in_size = out_size
+
+        # initialise the blocks
+        for m in self.children():
+            init_weights(m, init_type='kaiming')
+
+    def forward(self, inputs):
+        x = inputs
+        for i in range(1, self.n + 1):
+            conv = getattr(self, 'conv%d' % i)
+            x = F.relu(conv(x))
+
+        return x
+
+
+# encoder加入AR2块
+class UnetConv2AR2(nn.Module):
+    def __init__(self, in_size, out_size, is_batchnorm, n=2, ks=3, stride=1, padding=1):
+        """
+        :param in_size:输入channel
+        :param out_size:输出channel
+        :param is_batchnorm:是否使用batchnorm
+        :param n:卷积次数
+        :param ks: 卷积核长度
+        :param stride:步长
+        :param padding:填充
+        """
+        super(UnetConv2AR2, self).__init__()
+        self.n = n
+        self.ks = ks
+        self.stride = stride
+        self.padding = padding
+        s = stride
+        p = padding
+        if is_batchnorm:
+            for i in range(1, n + 1):
+                conv = nn.Sequential(AR2Block(in_size, out_size),
+                                     nn.BatchNorm2d(out_size),
+                                     nn.ReLU(inplace=True), )
+                setattr(self, 'conv%d' % i, conv)
+
+                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
+                #
+                # setattr(self, 'res%d' % i, res)
+
+                in_size = out_size
+
+        else:
+            for i in range(1, n + 1):
+                conv = nn.Sequential(AR2Block(in_size, out_size),
+                                     nn.ReLU(inplace=True), )
+                setattr(self, 'conv%d' % i, conv)
+                in_size = out_size
+
+        # initialise the blocks
+        for m in self.children():
+            init_weights(m, init_type='kaiming')
+
+    def forward(self, inputs):
+        x = inputs
+        for i in range(1, self.n + 1):
+            conv = getattr(self, 'conv%d' % i)
+            x = F.relu(conv(x))
 
         return x
 
