@@ -33,11 +33,11 @@ def calculate_mPA(disease_place, label_disease):
     return mPA
 
 
-# 计算综合评分
-def calculate_score(disease_place, label_disease):
-    score = (calculate_dice(disease_place, label_disease) + calculate_mPA(disease_place, label_disease)) / 2
-
-    return score
+# # 计算综合评分
+# def calculate_score(disease_place, label_disease):
+#     score = (calculate_dice(disease_place, label_disease) + calculate_mPA(disease_place, label_disease)) / 2
+#
+#     return score
 
 
 def evaluate_model_baseline(model, device, image_root, result_root, label_root, width=256, height=256):
@@ -77,30 +77,12 @@ def evaluate_model_baseline(model, device, image_root, result_root, label_root, 
         cv2.imwrite(result_root + '/result_' + input_img_list[input_img_index], result_img.astype(np.uint8))
 
 
-def evaluate_model(model, device, image_root, result_root, label_root, width=256, height=256):
-    model = model.to(device)
-    model.eval()
-    input_img_list = os.listdir(image_root)
-    mask_img_list = os.listdir(label_root)
-    all_score = []
-    all_dice = []
-    all_mPA = []
-    # 遍历所有测试图片
-    for input_img_index in range(0, len(input_img_list)):
+def get_result(outputs, label_disease, input_img_name, result_root):
+    result_dice = 0
+    result_mPA = 0
+    result_score = 0
 
-        # 将图片转换为合适的输入
-        input_img = cv2.imread(image_root + '/' + input_img_list[input_img_index])
-        input_img = cv2.resize(input_img, (width, height))
-        input_img = input_img.transpose((2, 0, 1)) / 255.0
-
-        # 转换标签
-        mask_img = cv2.imread(label_root + '/' + mask_img_list[input_img_index])
-        mask_img = cv2.resize(mask_img, (width, height))
-        label_disease = (mask_img == 255).all(axis=2)
-
-        # 获取所有分支输出
-        input_tensor = torch.Tensor([input_img]).to(device)
-        outputs = model(input_tensor)
+    if type(outputs) == tuple:
         for output_index in range(0, len(outputs)):
             output = np.array(outputs[output_index].detach().cpu())
 
@@ -119,25 +101,86 @@ def evaluate_model(model, device, image_root, result_root, label_root, width=256
             if output_index == 0:
                 dice = calculate_dice(disease_place, label_disease)
                 mPA = calculate_mPA(disease_place, label_disease)
-                score = (dice+mPA)/2
-                all_dice.append(dice)
-                all_mPA.append(mPA)
-                all_score.append(score)
+                score = (dice + mPA) / 2
+                result_dice = dice
+                result_mPA = mPA
+                result_score = score
 
             result_img = cv2.cvtColor(result.astype(np.uint8), cv2.COLOR_GRAY2BGR)
-            cv2.imwrite(result_root + '/result_' + str(output_index) + '_' + input_img_list[input_img_index], result_img.astype(np.uint8))
+            cv2.imwrite(result_root + '/result_' + str(output_index) + '_' + input_img_name, result_img.astype(np.uint8))
+    else:
+        # 转换回图片样式
+        output = np.array(outputs[0].detach().cpu())
+        result = output.transpose((1, 2, 0))
+        # 获取分类
+        disease_place = (result > 0.5).all(axis=2)
+
+        # 设置颜色
+        result[~disease_place] = 0
+        result[disease_place] += 127
+
+        result[label_disease] += 63
+
+        # 计算主分支评分
+
+        dice = calculate_dice(disease_place, label_disease)
+        mPA = calculate_mPA(disease_place, label_disease)
+        score = (dice + mPA) / 2
+        result_dice = dice
+        result_mPA = mPA
+        result_score = score
+
+        result_img = cv2.cvtColor(result.astype(np.uint8), cv2.COLOR_GRAY2BGR)
+        cv2.imwrite(result_root + '/result_' + '_' + input_img_name, result_img.astype(np.uint8))
+
+    return result_dice, result_mPA, result_score
+
+
+# 评估模型
+def evaluate_model(model, device, image_root, result_root, label_root, width=256, height=256):
+    model = model.to(device)
+    model.eval()
+    input_img_list = os.listdir(image_root)
+    mask_img_list = os.listdir(label_root)
+    all_score = []
+    all_dice = []
+    all_mPA = []
+    # 遍历所有测试图片
+    for input_img_index in range(0, len(input_img_list)):
+        # 将图片转换为合适的输入
+        input_img_name = input_img_list[input_img_index]
+        input_img = cv2.imread(image_root + '/' + input_img_name)
+        input_img = cv2.resize(input_img, (width, height))
+        input_img = input_img.transpose((2, 0, 1)) / 255.0
+
+        # 转换标签
+        mask_img = cv2.imread(label_root + '/' + mask_img_list[input_img_index])
+        mask_img = cv2.resize(mask_img, (width, height))
+        label_disease = (mask_img == 255).all(axis=2)
+
+        # 获取所有分支输出
+        input_tensor = torch.Tensor([input_img]).to(device)
+        outputs = model(input_tensor)
+
+        # 获取结果并保存图片
+        dice, mPA, score = get_result(outputs, label_disease, input_img_name,result_root)
+
+        all_dice.append(dice)
+        all_mPA.append(mPA)
+        all_score.append(score)
 
     # 在测试集上的平均评分
     mean_dice = sum(all_dice) / len(all_dice)
     mean_mPA = sum(all_mPA) / len(all_mPA)
     mean_score = sum(all_score) / len(all_score)
-    print(mean_dice, mean_mPA, mean_score)
+    print('mean_dice:', mean_dice, 'mean_mPA:', mean_mPA, 'mean_score:', mean_score)
+
+
 # 0.514780701314058 0.7090536218407361 0.6119171615773968
 # 0.6319317774189223 0.7619652029576374 0.6969484901882798
 
-# 0.0273972602739726 0.5074626865671642 0.2674299734205684
-
-
+# 0.8167270655469886 0.9181498657464561 0.8674384656467223
+# mean_dice: 0.9441329243881572 mean_mPA: 0.970669604123489 mean_score: 0.957401264255823
 
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -148,6 +191,8 @@ if __name__ == '__main__':
     label_root = r'F:/dataset/medical/thrombus/mask/chenxianhong-right'
     result_root = r'./results'
 
+    width = 256
+    height = 256
     # 测试深监督unet3+
     # model = UNet_3Plus_DeepSup(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_model.pth'
@@ -159,12 +204,13 @@ if __name__ == '__main__':
     # model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
 
-    model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
+    # model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
+
+    model = UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'checkpoints/UNet3P.pth'
     if os.path.exists(model_path):
         model.load_state_dict(torch.load(model_path))
         print('load model over')
-    width = 256
-    height = 256
-    evaluate_model(model, device, image_root, result_root, label_root=label_root, width=width, height=height)
 
+    evaluate_model(model, device, image_root, result_root, label_root=label_root, width=width, height=height)

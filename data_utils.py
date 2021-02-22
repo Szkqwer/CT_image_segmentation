@@ -7,7 +7,7 @@ import cv2
 
 
 # 将图片路径写入csv
-def write_root(picture_root, mask_root, csv_root):
+def write_root_thrombus(picture_root, mask_root, train_csv_root, test_csv_root):
     # 输入图像路径
     p_root_list = []
     for p_root, p_dirs, file_names in os.walk(picture_root):
@@ -23,11 +23,16 @@ def write_root(picture_root, mask_root, csv_root):
             gt_root_list.append(gt_path)
 
     # 写入
-    f = open(csv_root, 'w')
+    f_train = open(train_csv_root, 'w')
+    f_test = open(test_csv_root, 'w')
     for i in range(0, len(gt_root_list)):
         str_w = p_root_list[i] + ',' + gt_root_list[i] + '\n'
-        f.write(str_w)
-    f.close()
+        if i % 10 == 9:
+            f_test.write(str_w)
+        else:
+            f_train.write(str_w)
+    f_train.close()
+    f_test.close()
 
 
 # 点(x,y) 绕(cx,cy)点旋转
@@ -72,7 +77,7 @@ def data_enhance(input_img, label_img):
     new_label = rotate_img(label_img, degree)
 
     # 随机加噪声
-    prob = 0.1
+    prob = 0.15
     new_img = add_noise(new_img, prob)
 
     return new_img, new_label
@@ -135,4 +140,8 @@ class CTDataset(Dataset):
 
 
 if __name__ == '__main__':
-    write_root(picture_root=r'F://dataset/medical/thrombus/image', mask_root=r'F://dataset/medical/thrombus/mask', csv_root=r'./thrombus_train_data.csv')
+    picture_root = r'F://dataset/medical/thrombus/image'
+    mask_root = r'F://dataset/medical/thrombus/mask'
+    train_csv_root = r'./train_data/thrombus_train_data.csv'
+    test_csv_root = r'./train_data/thrombus_test_data.csv'
+    write_root_thrombus(picture_root=picture_root, mask_root=mask_root, train_csv_root=train_csv_root, test_csv_root=test_csv_root)

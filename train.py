@@ -81,8 +81,6 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
         all_loss = []
         print('train round:', train_round)
 
-        # i=0
-
         for input_images, masks in train_loader:
             # 预处理数据
             input_images = torch.tensor(input_images, dtype=torch.float)
@@ -96,10 +94,6 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
             optimizer.zero_grad()
             # 模型输出
             outputs = input_model(input_images)
-
-            # if i==24:
-            #     a=IOU_loss(outputs[4], masks)
-            #     print('a')
 
             # 计算loss
             loss = criterion(outputs, masks, beta)
@@ -170,58 +164,52 @@ if __name__ == '__main__':
     # 定义基本数据
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 只能单GPU运行
     # lr = 1e-3
-    batch_size = 1
+    # batch_size = 1
     epoch = 400
     width = 256
     height = 256
 
-    # 基本unet3+使用交叉熵作为损失函数
-    # model_CELoss = UNet3P(in_channels=3, n_classes=2, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # CELoss_model_path = r'./checkpoints/UNet3P_CELoss.pth'
-    # criterion = torch.nn.CrossEntropyLoss()
-    # train_baseline(model_CELoss, device, criterion, CELoss_model_path, lr=lr, batch_size=batch_size, epoch=epoch*3, width=width, height=height)
+    # 基本unet3+
+    batch_size = 3
+    model = UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'checkpoints/UNet3P.pth'
+    step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用论文loss和模型
     # cgm
+    # batch_size = 3
     # model = DeepSup_CGM_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_CGM_UNet3P.pth'
     # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # dsp
+    # batch_size = 3
     # model = DeepSup_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_UNet3P.pth'
     # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用自定义模型
     # res
+    # batch_size = 3
     # model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
     # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # # res2
+    # batch_size = 3
     # model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
     # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # # res2next
+    # batch_size = 1
     # model = DeepSup_Res2XUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = r'./checkpoints/DeepSup_Res2xUNet3P.pth'
     # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
-    # res2加入attention
-    model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
-    step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
-
-    # 定义损失函数等信息
-    # lr = 1e-3
+    # AR2UNet3P
     # batch_size = 1
-    # epoch = 400
-    # width = 256
-    # height = 256
-    # criterion = loss_fun_2_avg
-    # train(model, device, criterion, model_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
+    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
-    # lr = 1e-5
-    # criterion = loss_fun_iou
-    # train(model, device, criterion, model_path, lr=lr,batch_size=batch_size, epoch=epoch, width=width, height=height)

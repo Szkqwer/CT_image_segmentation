@@ -7,7 +7,7 @@ from models.init_weights import init_weights
 import numpy as np
 
 '''
-    UNet 3+
+    基本UNet 3+
 '''
 
 
@@ -244,12 +244,12 @@ class UNet3P(nn.Module):
         d1 = self.outconv1(hd1)  # d1->320*320*n_classes
 
         # 若使用crossentropyloss不要用sigmoid或者softmax loss自带softmax
-        return d1
-        # return F.sigmoid(d1)
+        # return d1
+        return F.sigmoid(d1)
 
 
 '''
-    UNet 3+ with deep supervision
+    深监督UNet3+ 
 '''
 
 
@@ -509,6 +509,11 @@ class DeepSup_UNet3P(nn.Module):
         return F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5)
 
 
+'''
+    深监督ResUNet3P
+'''
+
+
 class DeepSup_ResUNet3P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
         super(DeepSup_ResUNet3P, self).__init__()
@@ -763,6 +768,11 @@ class DeepSup_ResUNet3P(nn.Module):
 
         d1 = self.outconv1(hd1)  # 256
         return F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5)
+
+
+'''
+    深监督Res2UNet3P
+'''
 
 
 class DeepSup_Res2UNet3P(nn.Module):
@@ -1021,6 +1031,9 @@ class DeepSup_Res2UNet3P(nn.Module):
         return F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5)
 
 
+
+
+
 class DeepSup_Res2XUNet3P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
         super(DeepSup_Res2XUNet3P, self).__init__()
@@ -1276,6 +1289,9 @@ class DeepSup_Res2XUNet3P(nn.Module):
         d1 = self.outconv1(hd1)  # 256
         return F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5)
 
+'''
+    AR2UNet3P
+'''
 
 class DeepSup_AR2UNet3P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
@@ -1534,7 +1550,7 @@ class DeepSup_AR2UNet3P(nn.Module):
 
 
 '''
-    UNet 3+ with deep supervision and class-guided module
+    深监督+CGM UNet 3+
 '''
 
 
