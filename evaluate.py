@@ -217,12 +217,20 @@ if __name__ == '__main__':
     # device = torch.device("cpu")
 
     # 定义各种路径
-    picture_root = r'./results/picture'
-    score_root = r'./results/score'
-
+    # 数据集
     dataset_dict = {'tumor': r'./csv_data/tumor_test_data.csv.csv', 'thrombus': r'./csv_data/thrombus_test_data.csv'}
     dataset_name = 'thrombus'
     csv_path = dataset_dict[dataset_name]
+
+    # 结果位置
+    picture_root = r'./results/picture_'+dataset_name
+    score_root = r'./results/score_'+dataset_name
+    if not os.path.exists(picture_root):
+        os.makedirs(picture_root)
+    if not os.path.exists(score_root):
+        os.makedirs(score_root)
+
+    # 模型位置
     checkpoint_folder = r'./checkpoints'
 
     # 定义图片宽高
@@ -230,33 +238,33 @@ if __name__ == '__main__':
     height = 256
 
     # 基本unet3+
-    # model = UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
-    # evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
-
-    # 使用论文loss和模型
-    # cgm
-    model = DeepSupCGMUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model = UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
     evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
 
-    # dsp
-    # model = DeepSupUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # 使用论文loss和模型
+    # cgm
+    # model = DeepSupCGMUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
     # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
     # evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
+
+    # dsp
+    model = DeepSupUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
+    evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
 
     # 使用自定义模型
     # res
-    # model = DeepSupResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
-    # evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
+    model = DeepSupResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
+    evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
 
     # res2
-    # model = DeepSupRes2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
-    # evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
+    model = DeepSupRes2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
+    evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
 
     # AR2UNet3P
-    # model = DeepSupAR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
-    # evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
+    model = DeepSupAR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
+    evaluate_model(model, model_path, device, csv_path, picture_root, score_root, width=width, height=height)
