@@ -153,7 +153,7 @@ class CTDataset(Dataset):
         mask_img = cv2.resize(mask_img, (self.width, self.height))
 
         # 数据增强
-        input_img, mask_img = data_enhance(input_img, mask_img)
+        # input_img, mask_img = data_enhance(input_img, mask_img)
 
         # 标签类型判定
         if mask_img.max()==255:

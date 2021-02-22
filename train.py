@@ -164,7 +164,8 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
 if __name__ == '__main__':
     # 定义基本数据
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 只能单GPU运行
-    csv_path = r'./csv_data/thrombus_train_data.csv'
+    csv_path = r'./csv_data/thrombus_test_data.csv'
+    # csv_path = r'./csv_data/thrombus_train_data.csv'
     epoch = 400
     width = 256
     height = 256
@@ -183,10 +184,10 @@ if __name__ == '__main__':
     # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # dsp
-    # batch_size = 3
-    # model = DeepSup_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'./checkpoints/DeepSup_UNet3P.pth'
-    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    batch_size = 3
+    model = DeepSup_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'./checkpoints/DeepSup_UNet3P.pth'
+    step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用自定义模型
     # res
@@ -196,10 +197,10 @@ if __name__ == '__main__':
     # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # res2
-    batch_size = 2
-    model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
-    step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # batch_size = 2
+    # model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
+    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # AR2UNet3P
     # batch_size = 1

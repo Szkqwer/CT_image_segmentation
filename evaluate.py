@@ -236,9 +236,9 @@ if __name__ == '__main__':
     # evaluate_model(model, model_path, device, csv_root, picture_root, score_root, width=width, height=height)
 
     # dsp
-    # model = DeepSup_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'./checkpoints/DeepSup_UNet3P.pth'
-    # evaluate_model(model, model_path, device, csv_root, picture_root, score_root, width=width, height=height)
+    model = DeepSup_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'./checkpoints/DeepSup_UNet3P.pth'
+    evaluate_model(model, model_path, device, csv_root, picture_root, score_root, width=width, height=height)
 
     # 使用自定义模型
     # res
