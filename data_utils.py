@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 
 
-# 将图片路径写入csv
+# 将血栓图片路径写入csv
 def write_root_thrombus(picture_root, mask_root, train_csv_root, test_csv_root):
     # 输入图像路径
     p_root_list = []
@@ -27,10 +27,48 @@ def write_root_thrombus(picture_root, mask_root, train_csv_root, test_csv_root):
     f_test = open(test_csv_root, 'w')
     for i in range(0, len(gt_root_list)):
         str_w = p_root_list[i] + ',' + gt_root_list[i] + '\n'
-        if i % 10 == 9:
+        if i % 10 == 8:
             f_test.write(str_w)
         else:
             f_train.write(str_w)
+    f_train.close()
+    f_test.close()
+
+
+# 将肿瘤图片写入csv
+def write_root_tumor(data_root, train_csv_root, test_csv_root):
+    # 图像路径dict
+    root_dict = {}
+
+    for root, dirs, file_names in os.walk(data_root):
+        for file_name in file_names:
+
+            if 'mask' in file_name:
+                gt_path = os.path.join(root, file_name)
+                temp = file_name.split('_')
+                p_file = '_'.join(temp[:-1]) + r'.tif'
+                p_path = os.path.join(root, p_file)
+                root_dict[p_path] = gt_path
+                pass
+
+    # p_root_list.sort()
+    # gt_root_list.sort()
+    # # for gt_root, gt_dirs, file_names in os.walk(mask_root):
+    # #     for file_name in file_names:
+    # #         gt_path = os.path.join(gt_root, file_name)
+    # #         gt_root_list.append(gt_path)
+    #
+    # 写入
+    f_train = open(train_csv_root, 'w')
+    f_test = open(test_csv_root, 'w')
+    i = 0
+    for p_path in root_dict:
+        str_w = p_path + ',' + root_dict[p_path] + '\n'
+        if i % 10 == 8:
+            f_test.write(str_w)
+        else:
+            f_train.write(str_w)
+        i += 1
     f_train.close()
     f_test.close()
 
@@ -89,13 +127,11 @@ class CTDataset(Dataset):
      root：图像存放地址根路径
      width: 图片宽度
      height：图片高度
-     is_use_cel:是否以 便于计算交叉熵损失函数形式输出
     """
 
-    def __init__(self, csv_root, width, height, is_use_cel=True):
+    def __init__(self, csv_root, width, height):
         self.width = width
         self.height = height
-        self.is_use_CEL = is_use_cel
         # 这个list存放所有图像的地址
         csv_file = open(csv_root, 'r')
         all_lines = csv_file.readlines()
@@ -117,15 +153,18 @@ class CTDataset(Dataset):
         mask_img = cv2.resize(mask_img, (self.width, self.height))
 
         # 数据增强
-        input_img, mask_img = data_enhance(input_img, mask_img)
+        # input_img, mask_img = data_enhance(input_img, mask_img)
 
-        if self.is_use_CEL:
-            label_img = cv2.cvtColor(mask_img, cv2.COLOR_BGR2GRAY) / 255.0
-        else:
-            label_img = np.zeros((self.height, self.width, 1))
+        # 标签类型判定
+        if mask_img.max()==255:
             disease_place = (mask_img == np.array([255, 255, 255])).all(axis=2)
-            label_img[disease_place] = np.array([1])
-            label_img = label_img.transpose((2, 0, 1))
+        else:
+            disease_place = (mask_img == np.array([1, 1, 1])).all(axis=2)
+
+        # 标签图片转换为标准类型
+        label_img = np.zeros((self.height, self.width, 1))
+        label_img[disease_place] = np.array([1])
+        label_img = label_img.transpose((2, 0, 1))
 
         # temp=cv2.cvtColor(mask_img.astype('uint8'), cv2.COLOR_GRAY2BGR)
         # cv2.imwrite('a.png',mask_img)
@@ -140,8 +179,15 @@ class CTDataset(Dataset):
 
 
 if __name__ == '__main__':
+    # 生成血栓数据csv
     picture_root = r'F://dataset/medical/thrombus/image'
     mask_root = r'F://dataset/medical/thrombus/mask'
-    train_csv_root = r'./train_data/thrombus_train_data.csv'
-    test_csv_root = r'./train_data/thrombus_test_data.csv'
+    train_csv_root = r'./csv_data/thrombus_train_data.csv'
+    test_csv_root = r'./csv_data/thrombus_test_data.csv'
     write_root_thrombus(picture_root=picture_root, mask_root=mask_root, train_csv_root=train_csv_root, test_csv_root=test_csv_root)
+
+    # 生成肿瘤数据csv
+    # data_root = r'F://dataset/medical/brain_tumor'
+    # train_csv_root = r'./csv_data/tumor_train_data.csv'
+    # test_csv_root = r'./csv_data/tumor_test_data.csv'
+    # write_root_tumor(data_root, train_csv_root, test_csv_root)

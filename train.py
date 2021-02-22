@@ -22,7 +22,7 @@ def train_baseline(input_model, input_device, loss_fun, model_path, lr=5e-4, bat
 
     input_model.train()
     # 数据集
-    dataset = CTDataset('./train_data/thrombus_train_data.csv', width, height, True)
+    dataset = CTDataset('./csv_data/thrombus_train_data.csv', width, height, True)
     train_loader = DataLoader(dataset, batch_size=batch_size, num_workers=4, shuffle=False)
 
     # 定义模型参数
@@ -68,7 +68,7 @@ def train(input_model, input_device, loss_fun, model_path, lr=1e-3, batch_size=3
 
     input_model.train()
     # 数据集
-    dataset = CTDataset(r'./train_data/thrombus_train_data.csv', width, height, False)
+    dataset = CTDataset(r'./csv_data/thrombus_train_data.csv', width, height)
     train_loader = DataLoader(dataset, batch_size=batch_size, num_workers=1, shuffle=False)
 
     # 定义模型参数
@@ -136,7 +136,7 @@ def step_train(input_model, input_device, model_path, batch_size=3, epoch=400, w
     # 初始化beta
     beta = 1
     # 定义beta降低速度和轮数
-    dec_epoch = 10
+    dec_epoch = 5
     dec_rate = 0.99
     # 保存间隔轮数
     save_epoch = 1
@@ -170,10 +170,10 @@ if __name__ == '__main__':
     height = 256
 
     # 基本unet3+
-    batch_size = 3
-    model = UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'checkpoints/UNet3P.pth'
-    step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # batch_size = 3
+    # model = UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = r'checkpoints/UNet3P.pth'
+    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用论文loss和模型
     # cgm
@@ -201,15 +201,10 @@ if __name__ == '__main__':
     # model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
     # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
-    # # res2next
-    # batch_size = 1
-    # model = DeepSup_Res2XUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'./checkpoints/DeepSup_Res2xUNet3P.pth'
-    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # AR2UNet3P
-    # batch_size = 1
-    # model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
-    # step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    batch_size = 1
+    model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
+    step_train(model, device, model_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
