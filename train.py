@@ -7,7 +7,7 @@ from data_utils import CTDataset
 from loss.iouLoss import IOU_loss
 from loss.mixLoss import MixLoss
 
-from models.UNet3P_Series import UNet3P, DeepSup_CGM_UNet3P, DeepSup_UNet3P, DeepSup_ResUNet3P, DeepSup_Res2UNet3P, DeepSup_Res2XUNet3P, DeepSup_AR2UNet3P
+from models.UNet3P_Series import UNet3P, DeepSupCGMUNet3P, DeepSupUNet3P, DeepSupResUNet3P, DeepSupRes2UNet3P, DeepSupRes2XUNet3P, DeepSupAR2UNet3P
 
 import numpy as np
 
@@ -164,8 +164,15 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
 if __name__ == '__main__':
     # 定义基本数据
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 只能单GPU运行
-    csv_path = r'./csv_data/thrombus_test_data.csv'
+
+    # 定义数据集名字
+    dataset_dict = {'tumor': r'./csv_data/tumor_train_data.csv.csv', 'thrombus': r'./csv_data/thrombus_train_data.csv'}
+    dataset_name = 'thrombus'
+    csv_path = dataset_dict[dataset_name]
+    checkpoint_folder = r'./checkpoints'
     # csv_path = r'./csv_data/thrombus_train_data.csv'
+
+    # 训练数据
     epoch = 400
     width = 256
     height = 256
@@ -173,37 +180,37 @@ if __name__ == '__main__':
     # 基本unet3+
     # batch_size = 3
     # model = UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'checkpoints/UNet3P.pth'
+    # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
     # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用论文loss和模型
     # cgm
-    # batch_size = 3
-    # model = DeepSup_CGM_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'./checkpoints/DeepSup_CGM_UNet3P.pth'
-    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    batch_size = 3
+    model = DeepSupCGMUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path=checkpoint_folder+'/'+model.__class__.__name__+'_'+dataset_name+'.pth'
+    step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # dsp
-    batch_size = 3
-    model = DeepSup_UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = r'./checkpoints/DeepSup_UNet3P.pth'
-    step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # batch_size = 3
+    # model = DeepSupUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
+    # step_train(model, device, model_path, csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # 使用自定义模型
     # res
     # batch_size = 3
     # model = DeepSup_ResUNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'./checkpoints/DeepSup_ResUNet3P.pth'
+    # model_path=checkpoint_folder+'/'+model.__class__.__name__+'_'+dataset_name+'.pth'
     # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # res2
     # batch_size = 2
     # model = DeepSup_Res2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'./checkpoints/DeepSup_Res2UNet3P.pth'
+    # model_path=checkpoint_folder+'/'+model.__class__.__name__+'_'+dataset_name+'.pth'
     # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # AR2UNet3P
     # batch_size = 1
     # model = DeepSup_AR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = r'checkpoints/DeepSup_AR2UNet3P.pth'
+    # model_path=checkpoint_folder+'/'+model.__class__.__name__+'_'+dataset_name+'.pth'
     # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)

@@ -153,10 +153,10 @@ class CTDataset(Dataset):
         mask_img = cv2.resize(mask_img, (self.width, self.height))
 
         # 数据增强
-        # input_img, mask_img = data_enhance(input_img, mask_img)
+        input_img, mask_img = data_enhance(input_img, mask_img)
 
         # 标签类型判定
-        if mask_img.max()==255:
+        if mask_img.max() == 255:
             disease_place = (mask_img == np.array([255, 255, 255])).all(axis=2)
         else:
             disease_place = (mask_img == np.array([1, 1, 1])).all(axis=2)

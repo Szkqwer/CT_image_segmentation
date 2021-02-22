@@ -253,9 +253,9 @@ class UNet3P(nn.Module):
 '''
 
 
-class DeepSup_UNet3P(nn.Module):
+class DeepSupUNet3P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
-        super(DeepSup_UNet3P, self).__init__()
+        super(DeepSupUNet3P, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
         self.is_batchnorm = is_batchnorm
@@ -514,9 +514,9 @@ class DeepSup_UNet3P(nn.Module):
 '''
 
 
-class DeepSup_ResUNet3P(nn.Module):
+class DeepSupResUNet3P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
-        super(DeepSup_ResUNet3P, self).__init__()
+        super(DeepSupResUNet3P, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
         self.is_batchnorm = is_batchnorm
@@ -775,9 +775,9 @@ class DeepSup_ResUNet3P(nn.Module):
 '''
 
 
-class DeepSup_Res2UNet3P(nn.Module):
+class DeepSupRes2UNet3P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
-        super(DeepSup_Res2UNet3P, self).__init__()
+        super(DeepSupRes2UNet3P, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
         self.is_batchnorm = is_batchnorm
@@ -1034,9 +1034,9 @@ class DeepSup_Res2UNet3P(nn.Module):
 
 
 
-class DeepSup_Res2XUNet3P(nn.Module):
+class DeepSupRes2XUNet3P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
-        super(DeepSup_Res2XUNet3P, self).__init__()
+        super(DeepSupRes2XUNet3P, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
         self.is_batchnorm = is_batchnorm
@@ -1293,9 +1293,9 @@ class DeepSup_Res2XUNet3P(nn.Module):
     AR2UNet3P
 '''
 
-class DeepSup_AR2UNet3P(nn.Module):
+class DeepSupAR2UNet3P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
-        super(DeepSup_AR2UNet3P, self).__init__()
+        super(DeepSupAR2UNet3P, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
         self.is_batchnorm = is_batchnorm
@@ -1554,10 +1554,10 @@ class DeepSup_AR2UNet3P(nn.Module):
 '''
 
 
-class DeepSup_CGM_UNet3P(nn.Module):
+class DeepSupCGMUNet3P(nn.Module):
 
     def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
-        super(DeepSup_CGM_UNet3P, self).__init__()
+        super(DeepSupCGMUNet3P, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
         self.is_batchnorm = is_batchnorm
