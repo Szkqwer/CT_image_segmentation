@@ -37,50 +37,7 @@ def calculate_mPA(disease_place, label_disease):
     return mPA
 
 
-# # 计算综合评分
-# def calculate_score(disease_place, label_disease):
-#     score = (calculate_dice(disease_place, label_disease) + calculate_mPA(disease_place, label_disease)) / 2
-#
-#     return score
-
-
-def evaluate_model_baseline(model, device, image_root, result_root, label_root, width=256, height=256):
-    model = model.to(device)
-    model.eval()
-    input_img_list = os.listdir(image_root)
-    mask_img_list = os.listdir(label_root)
-    # 遍历所有测试图片
-    for input_img_index in range(0, len(input_img_list)):
-        # 将图片转换为合适的输入
-        input_img = cv2.imread(image_root + '/' + input_img_list[input_img_index])
-        input_img = cv2.resize(input_img, (width, height))
-        input_img = input_img.transpose((2, 0, 1)) / 255.0
-
-        mask_img = cv2.imread(label_root + '/' + mask_img_list[input_img_index])
-        mask_img = cv2.resize(mask_img, (width, height))
-        label_disease = (mask_img == 255).all(axis=2)
-
-        # 获取输出
-        input_tensor = torch.Tensor([input_img]).to(device)
-        outputs = model(input_tensor).detach()
-        outputs = np.array(outputs.cpu())
-
-        # 转换回图片样式
-        result = outputs[0].transpose((1, 2, 0))
-        # 获取分类
-        result = np.argmax(result, axis=2)
-        disease_place = (result == 1).all(axis=2)
-        result[disease_place] = 255
-        result[~disease_place] = 0
-        result[label_disease] = 127
-
-        # result_img = result * 255
-        # result[label_disease] = 127
-        result_img = result.astype(np.uint8)
-        result_img = cv2.cvtColor(result_img, cv2.COLOR_GRAY2BGR)
-        cv2.imwrite(result_root + '/result_' + input_img_list[input_img_index], result_img.astype(np.uint8))
-
-
+# 计算评分并保存图片
 def get_result(outputs, label_disease, input_img_name, picture_root, model_name):
     result_dice = 0
     result_mPA = 0
@@ -203,15 +160,6 @@ def evaluate_model(model, model_path, device, csv_path, picture_root, score_root
     torch.cuda.empty_cache()
 
 
-# 0.514780701314058 0.7090536218407361 0.6119171615773968
-# 0.6319317774189223 0.7619652029576374 0.6969484901882798
-
-# 0.8167270655469886 0.9181498657464561 0.8674384656467223
-# mean_dice: 0.9441329243881572 mean_mPA: 0.970669604123489 mean_score: 0.957401264255823
-# mean_dice: 0.6147382262603662 mean_mPA: 0.7816819053782629 mean_score: 0.6982100658193146
-# mean_dice: 0.7317746759935629 mean_mPA: 0.8606408418849936 mean_score: 0.7962077589392782
-
-
 if __name__ == '__main__':
     device = torch.device("cuda:0")
     # device = torch.device("cpu")
@@ -223,8 +171,8 @@ if __name__ == '__main__':
     csv_path = dataset_dict[dataset_name]
 
     # 结果位置
-    picture_root = r'./results/picture_'+dataset_name
-    score_root = r'./results/score_'+dataset_name
+    picture_root = r'./results/picture_' + dataset_name
+    score_root = r'./results/score_' + dataset_name
     if not os.path.exists(picture_root):
         os.makedirs(picture_root)
     if not os.path.exists(score_root):
