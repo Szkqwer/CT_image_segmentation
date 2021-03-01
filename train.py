@@ -1,3 +1,4 @@
+import argparse
 import os
 import torch
 from torchsummary import summary
@@ -57,13 +58,13 @@ def train(input_model, input_device, loss_fun, model_path, csv_path, lr=1e-3, ba
             # i+=1
             # print(i)
 
-        print('Epoch loss:', str(np.mean(all_loss)))
+        print('mean epoch loss:', str(np.mean(all_loss)))
         # print(loss)
 
         # 降低beta
         if train_round % dec_epoch == dec_epoch - 1:
             beta *= dec_rate
-            print('decrease beta over')
+            print('decrease beta to',beta)
 
         # 保存模型
         if train_round % save_epoch == save_epoch - 1:
@@ -82,10 +83,10 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
     # 加载各模型数据
     if os.path.exists(model_path):
         input_model.load_state_dict(torch.load(model_path))
-        print('load model over')
+        print('load', input_model.__class__.__name__, 'over')
 
     # 初始化beta
-    beta = 0.7
+    beta = 0.45
     # 定义beta降低速度和轮数
     dec_epoch = 5
     dec_rate = 0.98
@@ -117,6 +118,7 @@ if __name__ == '__main__':
 
     # 定义数据集名字
     dataset_dict = {'tumor': r'./csv_data/tumor_train_data.csv', 'thrombus': r'./csv_data/thrombus_train_data.csv'}
+    # dataset_name = 'thrombus'
     dataset_name = 'tumor'
     csv_path = dataset_dict[dataset_name]
     checkpoint_folder = r'./checkpoints'
