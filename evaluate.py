@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
     # 定义各种路径
     # 数据集
-    dataset_dict = {'tumor': r'./csv_data/tumor_test_data.csv.csv', 'thrombus': r'./csv_data/thrombus_test_data.csv'}
+    dataset_dict = {'tumor': r'./csv_data/tumor_test_data.csv', 'thrombus': r'./csv_data/thrombus_test_data.csv'}
     # dataset_name = 'thrombus'
     dataset_name = 'tumor'
     csv_path = dataset_dict[dataset_name]
