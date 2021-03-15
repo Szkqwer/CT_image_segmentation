@@ -64,7 +64,7 @@ def write_root_tumor(data_root, train_csv_root, test_csv_root):
     i = 0
     for p_path in root_dict:
         str_w = p_path + ',' + root_dict[p_path] + '\n'
-        if i % 10 == 8:
+        if i % 10 == 1:
             f_test.write(str_w)
         else:
             f_train.write(str_w)
@@ -180,14 +180,14 @@ class CTDataset(Dataset):
 
 if __name__ == '__main__':
     # 生成血栓数据csv
-    picture_root = r'F://dataset/medical/thrombus/image'
-    mask_root = r'F://dataset/medical/thrombus/mask'
-    train_csv_root = r'./csv_data/thrombus_train_data.csv'
-    test_csv_root = r'./csv_data/thrombus_test_data.csv'
-    write_root_thrombus(picture_root=picture_root, mask_root=mask_root, train_csv_root=train_csv_root, test_csv_root=test_csv_root)
+    # picture_root = r'F://dataset/medical/thrombus/image'
+    # mask_root = r'F://dataset/medical/thrombus/mask'
+    # train_csv_root = r'./csv_data/thrombus_train_data.csv'
+    # test_csv_root = r'./csv_data/thrombus_test_data.csv'
+    # write_root_thrombus(picture_root=picture_root, mask_root=mask_root, train_csv_root=train_csv_root, test_csv_root=test_csv_root)
 
     # 生成肿瘤数据csv
-    # data_root = r'F://dataset/medical/brain_tumor'
-    # train_csv_root = r'./csv_data/tumor_train_data.csv'
-    # test_csv_root = r'./csv_data/tumor_test_data.csv'
-    # write_root_tumor(data_root, train_csv_root, test_csv_root)
+    data_root = r'F://dataset/medical/brain_tumor'
+    train_csv_root = r'./csv_data/tumor_train_data.csv'
+    test_csv_root = r'./csv_data/tumor_test_data.csv'
+    write_root_tumor(data_root, train_csv_root, test_csv_root)

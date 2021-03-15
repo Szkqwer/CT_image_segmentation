@@ -2,10 +2,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from layers import unetConv2, unetUp, unetUp_origin
-from init_weights import init_weights
-from torchvision import models
-import numpy as np
+from models.layers import UnetConv2, UnetUp, UnetUpOrigin
+from models.init_weights import init_weights
+
+from torchsummary import summary
+
 
 class UNet(nn.Module):
 
@@ -21,27 +22,27 @@ class UNet(nn.Module):
         # # filters = [int(x / self.feature_scale) for x in filters]
 
         # downsampling
-        self.conv1 = unetConv2(self.in_channels, filters[0], self.is_batchnorm)
+        self.conv1 = UnetConv2(self.in_channels, filters[0], self.is_batchnorm)
         self.maxpool1 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv2 = unetConv2(filters[0], filters[1], self.is_batchnorm)
+        self.conv2 = UnetConv2(filters[0], filters[1], self.is_batchnorm)
         self.maxpool2 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv3 = unetConv2(filters[1], filters[2], self.is_batchnorm)
+        self.conv3 = UnetConv2(filters[1], filters[2], self.is_batchnorm)
         self.maxpool3 = nn.MaxPool2d(kernel_size=2)
 
-        self.conv4 = unetConv2(filters[2], filters[3], self.is_batchnorm)
+        self.conv4 = UnetConv2(filters[2], filters[3], self.is_batchnorm)
         self.maxpool4 = nn.MaxPool2d(kernel_size=2)
 
-        self.center = unetConv2(filters[3], filters[4], self.is_batchnorm)
+        self.center = UnetConv2(filters[3], filters[4], self.is_batchnorm)
 
         # upsampling
-        self.up_concat4 = unetUp(filters[4], filters[3], self.is_deconv)
-        self.up_concat3 = unetUp(filters[3], filters[2], self.is_deconv)
-        self.up_concat2 = unetUp(filters[2], filters[1], self.is_deconv)
-        self.up_concat1 = unetUp(filters[1], filters[0], self.is_deconv)
+        self.up_concat4 = UnetUp(filters[4], filters[3], self.is_deconv)
+        self.up_concat3 = UnetUp(filters[3], filters[2], self.is_deconv)
+        self.up_concat2 = UnetUp(filters[2], filters[1], self.is_deconv)
+        self.up_concat1 = UnetUp(filters[1], filters[0], self.is_deconv)
         #
-        self.outconv1 = nn.Conv2d(filters[0], 1, 3, padding=1)
+        self.outconv1 = nn.Conv2d(filters[0], n_classes, 3, padding=1)
 
         # initialise weights
         for m in self.modules():
@@ -50,7 +51,7 @@ class UNet(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 init_weights(m, init_type='kaiming')
 
-    def dotProduct(self,seg,cls):
+    def dotProduct(self, seg, cls):
         B, N, H, W = seg.size()
         seg = seg.view(B, N, H * W)
         final = torch.einsum("ijk,ij->ijk", [seg, cls])
@@ -80,3 +81,10 @@ class UNet(nn.Module):
         d1 = self.outconv1(up1)  # 256
 
         return F.sigmoid(d1)
+
+
+if __name__ == '__main__':
+    in_channels=3
+    model = UNet(in_channels=in_channels, n_classes=3, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model.cuda()
+    summary(model, input_size=(3, 256, 256))

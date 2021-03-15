@@ -86,7 +86,8 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
         print('load', input_model.__class__.__name__, 'over')
 
     # 初始化beta
-    beta = 0.24
+    # beta = 0.7
+    beta = 0.16
     # 定义beta降低速度和轮数
     dec_epoch = 5
     dec_rate = 0.98
@@ -94,7 +95,7 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
     save_epoch = 1
 
     # 第一步训练
-    lr = 5e-5
+    lr = 1e-5
     gama_list = [0.5, 0.5, 0]
     criterion = MixLoss(gama_list)
     input_model, beta = train(input_model, input_device, criterion, model_path, csv_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height,

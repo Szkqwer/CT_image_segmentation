@@ -565,7 +565,7 @@ class UnetUp(nn.Module):
 
         # initialise the blocks
         for m in self.children():
-            if m.__class__.__name__.find('unetConv2') != -1: continue
+            if m.__class__.__name__.find('UnetConv2') != -1: continue
             init_weights(m, init_type='kaiming')
 
     def forward(self, inputs0, *input):
@@ -590,7 +590,7 @@ class UnetUpOrigin(nn.Module):
 
         # initialise the blocks
         for m in self.children():
-            if m.__class__.__name__.find('unetConv2') != -1: continue
+            if m.__class__.__name__.find('UnetConv2') != -1: continue
             init_weights(m, init_type='kaiming')
 
     def forward(self, inputs0, *input):
