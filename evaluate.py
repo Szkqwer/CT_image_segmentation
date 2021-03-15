@@ -8,7 +8,7 @@ from models.UNet3P_Series import UNet3P, DeepSupUNet3P, DeepSupResUNet3P, DeepSu
 
 # 计算dice
 def calculate_dice(disease_place, label_disease):
-    # 用乘法求交集
+    # 求交集
     TP_place = disease_place & label_disease
     # 准确预测数
     share_num = TP_place.sum()
@@ -38,25 +38,26 @@ def calculate_mPA(disease_place, label_disease):
 
 
 # 计算评分并保存图片
-def get_result(outputs, label_disease, input_img_name, picture_root, model_name):
+def get_result(input_img,mask_img,outputs, label_disease, input_img_name, picture_root, model_name):
     result_dice = 0
     result_mPA = 0
     result_score = 0
-
+    image_merge=np.hstack((input_img, mask_img))
     if type(outputs) == tuple:
         for output_index in range(0, len(outputs)):
             output = np.array(outputs[output_index].detach().cpu())
 
             # 转换回图片样式
             result = output[0].transpose((1, 2, 0))
+            out_img=np.zeros((result.shape[0],result.shape[1],3))
             # 获取分类
             disease_place = (result > 0.5).all(axis=2)
 
             # 设置颜色
-            result[~disease_place] = 0
-            result[disease_place] += 127
+            out_img[~disease_place] = np.array([0,0,0])
+            out_img[disease_place] += np.array([0,255,0])
 
-            result[label_disease] += 63
+            out_img[label_disease] += np.array([0,0,255])
 
             # 计算主分支评分
             if output_index == 0:
@@ -67,8 +68,12 @@ def get_result(outputs, label_disease, input_img_name, picture_root, model_name)
                 result_mPA = mPA
                 result_score = score
 
-                result_img = cv2.cvtColor(result.astype(np.uint8), cv2.COLOR_GRAY2BGR)
-                cv2.imwrite(picture_root + '/' + model_name + '_' + str(output_index) + '_' + input_img_name, result_img.astype(np.uint8))
+                # result_img = cv2.cvtColor(result.astype(np.uint8), cv2.COLOR_GRAY2BGR)
+            if output_index!=4:
+                image_merge = np.hstack((image_merge, out_img))
+
+        cv2.imwrite(picture_root + '/' + model_name + '_' + input_img_name, image_merge.astype(np.uint8))
+
     else:
         # 转换回图片样式
         output = np.array(outputs[0].detach().cpu())
@@ -130,7 +135,8 @@ def evaluate_model(input_model, model_path, device, csv_path, picture_root, scor
         input_img_name = input_root_list[input_root_index].split('\\')[-1]
         input_img = cv2.imread(input_root_list[input_root_index])
         input_img = cv2.resize(input_img, (width, height))
-        input_img = input_img.transpose((2, 0, 1)) / 255.0
+        input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+        input_array = input_img.transpose((2, 0, 1)) / 255.0
 
         # 转换标签
         mask_img = cv2.imread(mask_root_list[input_root_index])
@@ -138,11 +144,11 @@ def evaluate_model(input_model, model_path, device, csv_path, picture_root, scor
         label_disease = (mask_img == 255).all(axis=2)
 
         # 获取所有分支输出
-        input_tensor = torch.Tensor([input_img]).to(device)
+        input_tensor = torch.Tensor([input_array]).to(device)
         outputs = input_model(input_tensor)
 
         # 获取结果并保存图片
-        dice, mPA, score = get_result(outputs, label_disease, input_img_name, picture_root, model_name)
+        dice, mPA, score = get_result(input_img,mask_img,outputs, label_disease, input_img_name, picture_root, model_name)
 
         all_dice.append(dice)
         all_mPA.append(mPA)

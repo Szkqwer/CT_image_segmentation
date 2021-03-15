@@ -21,7 +21,7 @@ def train(input_model, input_device, loss_fun, model_path, csv_path, lr=1e-3, ba
     input_model.train()
     # 数据集
     dataset = CTDataset(csv_path, width, height)
-    train_loader = DataLoader(dataset, batch_size=batch_size, num_workers=8, shuffle=False)
+    train_loader = DataLoader(dataset, batch_size=batch_size, num_workers=8, shuffle=True)
 
     # 定义模型参数
     optimizer = torch.optim.Adam(input_model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
@@ -87,7 +87,7 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
 
     # 初始化beta
     # beta = 0.7
-    beta = 0.16
+    beta = 0.153
     # 定义beta降低速度和轮数
     dec_epoch = 5
     dec_rate = 0.98
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 只能单GPU运行
 
     # 定义数据集名字
-    dataset_dict = {'tumor': r'./csv_data/tumor_train_data.csv', 'thrombus': r'./csv_data/thrombus_train_data.csv'}
+    dataset_dict = {'tumor': r'./csv_data/tumor_test_data.csv', 'thrombus': r'./csv_data/thrombus_train_data.csv'}
     # dataset_name = 'thrombus'
     dataset_name = 'tumor'
     csv_path = dataset_dict[dataset_name]

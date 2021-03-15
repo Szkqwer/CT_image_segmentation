@@ -147,7 +147,7 @@ class CTDataset(Dataset):
         # 输入
         input_img = cv2.imread(self.input_list[index])
         input_img = cv2.resize(input_img, (self.width, self.height))
-
+        input_img=cv2.cvtColor(input_img,cv2.COLOR_BGR2RGB)
         # label
         mask_img = cv2.imread(self.mask_list[index])
         mask_img = cv2.resize(mask_img, (self.width, self.height))
