@@ -81,7 +81,7 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
 
     # 初始化beta
     # beta = 0.7
-    beta = 0.5
+    beta = 0.1
     # 定义beta降低速度和轮数
     dec_epoch = 5
     dec_rate = 0.98
@@ -112,9 +112,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 只能单GPU运行
 
     # 定义数据集名字
-    dataset_dict = {'tumor': r'./csv_data/tumor_test_data.csv', 'thrombus': r'./csv_data/thrombus_test_data.csv'}
-    dataset_name = 'thrombus'
-    # dataset_name = 'tumor'
+    dataset_dict = {'tumor': r'./csv_data/tumor_train_data.csv', 'thrombus': r'./csv_data/thrombus_train_data.csv'}
+    # dataset_name = 'thrombus'
+    dataset_name = 'tumor'
     csv_path = dataset_dict[dataset_name]
     checkpoint_folder = r'./checkpoints'
     # csv_path = r'./csv_data/thrombus_train_data.csv'
@@ -151,13 +151,13 @@ if __name__ == '__main__':
     # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # res2
-    batch_size = 2
-    model = DeepSupRes2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path=checkpoint_folder+'/'+model.__class__.__name__+'_'+dataset_name+'.pth'
-    step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # batch_size = 2
+    # model = DeepSupRes2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path=checkpoint_folder+'/'+model.__class__.__name__+'_'+dataset_name+'.pth'
+    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # AR2UNet3P
-    # batch_size = 1
-    # model = DeepSupAR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
-    # step_train(model, device, model_path, csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    batch_size = 1
+    model = DeepSupAR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
+    step_train(model, device, model_path, csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
