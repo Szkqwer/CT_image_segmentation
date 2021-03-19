@@ -38,26 +38,27 @@ def calculate_mPA(disease_place, label_disease):
 
 
 # 计算评分并保存图片
-def get_result(input_img,mask_img,outputs, label_disease, input_img_name, picture_root, model_name):
+def get_result(input_img, mask_img, outputs, label_disease, input_img_name, picture_root, model_name):
     result_dice = 0
     result_mPA = 0
     result_score = 0
-    image_merge=np.hstack((input_img, mask_img))
+    # input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+    image_merge = np.hstack((input_img, mask_img))
     if type(outputs) == tuple:
         for output_index in range(0, len(outputs)):
             output = np.array(outputs[output_index].detach().cpu())
 
             # 转换回图片样式
             result = output[0].transpose((1, 2, 0))
-            out_img=np.zeros((result.shape[0],result.shape[1],3))
+            out_img = np.zeros((result.shape[0], result.shape[1], 3))
             # 获取分类
-            disease_place = (result > 0.5).all(axis=2)
+            disease_place = (result >= 0.5).all(axis=2)
 
             # 设置颜色
-            out_img[~disease_place] = np.array([0,0,0])
-            out_img[disease_place] += np.array([0,255,0])
+            out_img[~disease_place] = np.array([0, 0, 0])
+            out_img[disease_place] += np.array([0, 255, 0])
 
-            out_img[label_disease] += np.array([0,0,255])
+            out_img[label_disease] += np.array([0, 0, 255])
 
             # 计算主分支评分
             if output_index == 0:
@@ -69,7 +70,7 @@ def get_result(input_img,mask_img,outputs, label_disease, input_img_name, pictur
                 result_score = score
 
                 # result_img = cv2.cvtColor(result.astype(np.uint8), cv2.COLOR_GRAY2BGR)
-            if output_index!=4:
+            if output_index != 4:
                 image_merge = np.hstack((image_merge, out_img))
 
         cv2.imwrite(picture_root + '/' + model_name + '_' + input_img_name, image_merge.astype(np.uint8))
@@ -78,17 +79,16 @@ def get_result(input_img,mask_img,outputs, label_disease, input_img_name, pictur
         # 转换回图片样式
         output = np.array(outputs[0].detach().cpu())
         result = output.transpose((1, 2, 0))
+        out_img = np.zeros((result.shape[0], result.shape[1], 3))
         # 获取分类
         disease_place = (result > 0.5).all(axis=2)
 
         # 设置颜色
-        result[~disease_place] = 0
-        result[disease_place] += 127
-
-        result[label_disease] += 63
+        out_img[~disease_place] = np.array([0, 0, 0])
+        out_img[disease_place] += np.array([0, 255, 0])
+        out_img[label_disease] += np.array([0, 0, 255])
 
         # 计算主分支评分
-
         dice = calculate_dice(disease_place, label_disease)
         mPA = calculate_mPA(disease_place, label_disease)
         score = (dice + mPA) / 2
@@ -96,8 +96,8 @@ def get_result(input_img,mask_img,outputs, label_disease, input_img_name, pictur
         result_mPA = mPA
         result_score = score
 
-        result_img = cv2.cvtColor(result.astype(np.uint8), cv2.COLOR_GRAY2BGR)
-        cv2.imwrite(picture_root + '/' + model_name + '_' + input_img_name, result_img.astype(np.uint8))
+        image_merge = np.hstack((image_merge, out_img))
+        cv2.imwrite(picture_root + '/' + model_name + '_' + input_img_name, image_merge.astype(np.uint8))
 
     return result_dice, result_mPA, result_score
 
@@ -112,8 +112,6 @@ def evaluate_model(input_model, model_path, device, csv_path, picture_root, scor
 
     input_model = input_model.to(device)
     input_model.eval()
-
-
 
     input_root_list = []
     mask_root_list = []
@@ -135,7 +133,7 @@ def evaluate_model(input_model, model_path, device, csv_path, picture_root, scor
         input_img_name = input_root_list[input_root_index].split('\\')[-1]
         input_img = cv2.imread(input_root_list[input_root_index])
         input_img = cv2.resize(input_img, (width, height))
-        input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+        # input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
         input_array = input_img.transpose((2, 0, 1)) / 255.0
 
         # 转换标签
@@ -148,7 +146,7 @@ def evaluate_model(input_model, model_path, device, csv_path, picture_root, scor
         outputs = input_model(input_tensor)
 
         # 获取结果并保存图片
-        dice, mPA, score = get_result(input_img,mask_img,outputs, label_disease, input_img_name, picture_root, model_name)
+        dice, mPA, score = get_result(input_img, mask_img, outputs, label_disease, input_img_name, picture_root, model_name)
 
         all_dice.append(dice)
         all_mPA.append(mPA)
@@ -175,8 +173,8 @@ if __name__ == '__main__':
     # 定义各种路径
     # 数据集
     dataset_dict = {'tumor': r'./csv_data/tumor_test_data.csv', 'thrombus': r'./csv_data/thrombus_test_data.csv'}
-    # dataset_name = 'thrombus'
-    dataset_name = 'tumor'
+    dataset_name = 'thrombus'
+    # dataset_name = 'tumor'
     csv_path = dataset_dict[dataset_name]
 
     # 结果位置

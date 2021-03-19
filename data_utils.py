@@ -45,6 +45,12 @@ def write_root_tumor(data_root, train_csv_root, test_csv_root):
 
             if 'mask' in file_name:
                 gt_path = os.path.join(root, file_name)
+                mask_img = cv2.imread(gt_path)
+
+                # 选择有病灶的图片
+                if np.max(mask_img) == 0:
+                    continue
+
                 temp = file_name.split('_')
                 p_file = '_'.join(temp[:-1]) + r'.tif'
                 p_path = os.path.join(root, p_file)
@@ -64,7 +70,7 @@ def write_root_tumor(data_root, train_csv_root, test_csv_root):
     i = 0
     for p_path in root_dict:
         str_w = p_path + ',' + root_dict[p_path] + '\n'
-        if i % 10 == 1:
+        if i % 200 == 51:
             f_test.write(str_w)
         else:
             f_train.write(str_w)
@@ -147,19 +153,20 @@ class CTDataset(Dataset):
         # 输入
         input_img = cv2.imread(self.input_list[index])
         input_img = cv2.resize(input_img, (self.width, self.height))
-        input_img=cv2.cvtColor(input_img,cv2.COLOR_BGR2RGB)
+        # input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2GRAY)
         # label
         mask_img = cv2.imread(self.mask_list[index])
         mask_img = cv2.resize(mask_img, (self.width, self.height))
 
         # 数据增强
-        input_img, mask_img = data_enhance(input_img, mask_img)
+        # input_img, mask_img = data_enhance(input_img, mask_img)
 
         # 标签类型判定
         if mask_img.max() == 255:
             disease_place = (mask_img == np.array([255, 255, 255])).all(axis=2)
         else:
             disease_place = (mask_img == np.array([1, 1, 1])).all(axis=2)
+
 
         # 标签图片转换为标准类型
         label_img = np.zeros((self.height, self.width, 1))
@@ -171,7 +178,7 @@ class CTDataset(Dataset):
         # cv2.imwrite('b.png',input_img)
 
         input_img = input_img.transpose((2, 0, 1)) / 255.0
-        return input_img.astype('float32'), label_img
+        return input_img.astype('float32'), label_img.astype('float32')
 
     def __len__(self):
         # 返回图像的数量

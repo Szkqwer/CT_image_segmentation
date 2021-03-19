@@ -20,6 +20,7 @@ class AttentionBlock(nn.Module):
             nn.BatchNorm2d(out_size),
             nn.ReLU(inplace=True),
             nn.Softmax(dim=1)
+            # nn.Sigmoid()
         )
 
     def forward(self, x):
@@ -45,12 +46,11 @@ class AR2Block(nn.Module):
 
         super(AR2Block, self).__init__()
         down_sample = None
-        if stride != 1 or inplanes != planes * self.expansion:
-            down_sample = nn.Sequential(
-                nn.Conv2d(inplanes, planes * self.expansion,
-                          kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * self.expansion),
-            )
+        # if stride != 1 or inplanes != planes * self.expansion:
+        #     down_sample = nn.Sequential(
+        #         nn.Conv2d(inplanes, planes * self.expansion,kernel_size=1, stride=stride, bias=False)
+        #         # nn.BatchNorm2d(planes * self.expansion),
+        #     )
 
         width = int(math.floor(planes * (base_width / 64.0)))
         self.conv1 = nn.Conv2d(inplanes, width * scale, kernel_size=1, bias=False)
@@ -82,7 +82,7 @@ class AR2Block(nn.Module):
         self.width = width
 
     def forward(self, x):
-        residual = x
+        # residual = x
         attention = self.attention(x)
 
         out = self.conv1(x)
@@ -109,16 +109,16 @@ class AR2Block(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
         out = out * (1 + attention)
-        if self.down_sample is not None:
-            residual = self.down_sample(x)
+        # if self.down_sample is not None:
+        #     residual = self.down_sample(x)
 
-        out += residual
+        # out += residual
         out = self.relu(out)
 
         return out
 
 
-# res2next基础结构
+# # res2next基础结构
 class Res2XBlock(nn.Module):
     expansion = 1  # 扩展倍数
 
@@ -136,12 +136,12 @@ class Res2XBlock(nn.Module):
         super(Res2XBlock, self).__init__()
 
         down_sample = None
-        if stride != 1 or inplanes != planes * self.expansion:
-            down_sample = nn.Sequential(
-                nn.Conv2d(inplanes, planes * self.expansion,
-                          kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * self.expansion),
-            )
+        # if stride != 1 or inplanes != planes * self.expansion:
+        #     down_sample = nn.Sequential(
+        #         nn.Conv2d(inplanes, planes * self.expansion,
+        #                   kernel_size=1, stride=stride, bias=False)
+        #         # nn.BatchNorm2d(planes * self.expansion),
+        #     )
 
         D = int(math.floor(planes * (base_width / 64.0)))
         C = cardinality
@@ -173,7 +173,7 @@ class Res2XBlock(nn.Module):
         self.scale = scale
 
     def forward(self, x):
-        residual = x
+        # residual = x
 
         out = self.conv1(x)
         out = self.bn1(out)
@@ -199,16 +199,17 @@ class Res2XBlock(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
 
-        if self.down_sample is not None:
-            residual = self.down_sample(x)
-
-        out += residual
+        # if self.down_sample is not None:
+        #     residual = self.down_sample(x)
+        #
+        # out += residual
         out = self.relu(out)
 
         return out
 
 
 # res2net的基础结构
+
 class Res2Block(nn.Module):
     expansion = 1
 
@@ -225,12 +226,12 @@ class Res2Block(nn.Module):
 
         super(Res2Block, self).__init__()
         down_sample = None
-        if stride != 1 or inplanes != planes * self.expansion:
-            down_sample = nn.Sequential(
-                nn.Conv2d(inplanes, planes * self.expansion,
-                          kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * self.expansion),
-            )
+        # if stride != 1 or inplanes != planes * self.expansion:
+        #     down_sample = nn.Sequential(
+        #         nn.Conv2d(inplanes, planes * self.expansion,
+        #                   kernel_size=1, stride=stride, bias=False)
+        #         # nn.BatchNorm2d(planes * self.expansion),
+        #     )
 
         width = int(math.floor(planes * (base_width / 64.0)))
         self.conv1 = nn.Conv2d(inplanes, width * scale, kernel_size=1, bias=False)
@@ -260,7 +261,7 @@ class Res2Block(nn.Module):
         self.width = width
 
     def forward(self, x):
-        residual = x
+        # residual = x
 
         out = self.conv1(x)
         out = self.bn1(out)
@@ -286,10 +287,10 @@ class Res2Block(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
 
-        if self.down_sample is not None:
-            residual = self.down_sample(x)
+        # if self.down_sample is not None:
+        #     residual = self.down_sample(x)
 
-        out += residual
+        # out += residual
         out = self.relu(out)
 
         return out
@@ -322,7 +323,6 @@ class UnetConv2Res(nn.Module):
                 setattr(self, 'conv%d' % i, conv)
 
                 res = nn.Sequential(nn.Conv2d(in_size, out_size, 1))
-
                 setattr(self, 'res%d' % i, res)
 
                 in_size = out_size
@@ -334,7 +334,6 @@ class UnetConv2Res(nn.Module):
                 setattr(self, 'conv%d' % i, conv)
 
                 res = nn.Sequential(nn.Conv2d(in_size, out_size, 1))
-
                 setattr(self, 'res%d' % i, res)
 
                 in_size = out_size
@@ -378,9 +377,8 @@ class UnetConv2Res2x(nn.Module):
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
 
-                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
-                #
-                # setattr(self, 'res%d' % i, res)
+                res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
+                setattr(self, 'res%d' % i, res)
 
                 in_size = out_size
 
@@ -389,6 +387,10 @@ class UnetConv2Res2x(nn.Module):
                 conv = nn.Sequential(Res2XBlock(in_size, out_size, 26, 4),
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
+
+                res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
+                setattr(self, 'res%d' % i, res)
+
                 in_size = out_size
 
         # initialise the blocks
@@ -399,7 +401,9 @@ class UnetConv2Res2x(nn.Module):
         x = inputs
         for i in range(1, self.n + 1):
             conv = getattr(self, 'conv%d' % i)
-            x = F.relu(conv(x))
+            res = getattr(self, 'res%d' % i)
+
+            x = F.relu(conv(x) + res(x))
 
         return x
 
@@ -428,17 +432,20 @@ class UnetConv2Res2(nn.Module):
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
 
-                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
-                #
-                # setattr(self, 'res%d' % i, res)
+                res = nn.Sequential(nn.Conv2d(in_size, out_size, 1))
+                setattr(self, 'res%d' % i, res)
 
                 in_size = out_size
 
         else:
             for i in range(1, n + 1):
-                conv = nn.Sequential(Res2Block(in_size, out_size),
-                                     nn.ReLU(inplace=True), )
+                conv = nn.Sequential(Res2Block(in_size, out_size), nn.ReLU(inplace=True), )
+
                 setattr(self, 'conv%d' % i, conv)
+
+                res = nn.Sequential(nn.Conv2d(in_size, out_size, 1))
+                setattr(self, 'res%d' % i, res)
+
                 in_size = out_size
 
         # initialise the blocks
@@ -449,7 +456,9 @@ class UnetConv2Res2(nn.Module):
         x = inputs
         for i in range(1, self.n + 1):
             conv = getattr(self, 'conv%d' % i)
-            x = F.relu(conv(x))
+            res = getattr(self, 'res%d' % i)
+
+            x = F.relu(conv(x) + res(x))
 
         return x
 
@@ -480,9 +489,8 @@ class UnetConv2AR2(nn.Module):
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
 
-                # res = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p))
-                #
-                # setattr(self, 'res%d' % i, res)
+                res = nn.Sequential(nn.Conv2d(in_size, out_size, 1))
+                setattr(self, 'res%d' % i, res)
 
                 in_size = out_size
 
@@ -491,6 +499,10 @@ class UnetConv2AR2(nn.Module):
                 conv = nn.Sequential(AR2Block(in_size, out_size),
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
+
+                res = nn.Sequential(nn.Conv2d(in_size, out_size, 1))
+                setattr(self, 'res%d' % i, res)
+
                 in_size = out_size
 
         # initialise the blocks
@@ -501,7 +513,9 @@ class UnetConv2AR2(nn.Module):
         x = inputs
         for i in range(1, self.n + 1):
             conv = getattr(self, 'conv%d' % i)
-            x = F.relu(conv(x))
+            res = getattr(self, 'res%d' % i)
+
+            x = F.relu(conv(x) + res(x))
 
         return x
 

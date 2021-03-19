@@ -21,11 +21,10 @@ def train(input_model, input_device, loss_fun, model_path, csv_path, lr=1e-3, ba
     input_model.train()
     # 数据集
     dataset = CTDataset(csv_path, width, height)
-    train_loader = DataLoader(dataset, batch_size=batch_size, num_workers=8, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=batch_size, num_workers=8, shuffle=False)
 
     # 定义模型参数
     optimizer = torch.optim.Adam(input_model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
-    # optimizer = torch.optim.SGD(input_model.parameters(), lr=lr, momentum=0.3)
     criterion = loss_fun
 
     # 训练epoch轮
@@ -34,12 +33,11 @@ def train(input_model, input_device, loss_fun, model_path, csv_path, lr=1e-3, ba
         print('train round:', train_round)
 
         for input_images, masks in train_loader:
+            # 对有病灶图片训练
+            # if have_diease.item():
             # 预处理数据
-            input_images = torch.tensor(input_images, dtype=torch.float)
             input_images = input_images.to(input_device)
 
-            # masks.type(torch.FloatTensor)
-            masks = torch.tensor(masks, dtype=torch.float)
             masks = masks.to(input_device)
 
             # 梯度置零
@@ -55,16 +53,12 @@ def train(input_model, input_device, loss_fun, model_path, csv_path, lr=1e-3, ba
             optimizer.step()
             all_loss.append(loss.item())
 
-            # i+=1
-            # print(i)
-
         print('mean epoch loss:', str(np.mean(all_loss)))
-        # print(loss)
 
         # 降低beta
         if train_round % dec_epoch == dec_epoch - 1:
             beta *= dec_rate
-            print('decrease beta to',beta)
+            print('decrease beta to', beta)
 
         # 保存模型
         if train_round % save_epoch == save_epoch - 1:
@@ -87,7 +81,7 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
 
     # 初始化beta
     # beta = 0.7
-    beta = 0.153
+    beta = 0.5
     # 定义beta降低速度和轮数
     dec_epoch = 5
     dec_rate = 0.98
@@ -95,18 +89,18 @@ def step_train(input_model, input_device, model_path, csv_path, batch_size=3, ep
     save_epoch = 1
 
     # 第一步训练
-    lr = 1e-5
+    lr = 1e-4
     gama_list = [0.5, 0.5, 0]
     criterion = MixLoss(gama_list)
     input_model, beta = train(input_model, input_device, criterion, model_path, csv_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height,
                               beta=beta, dec_epoch=dec_epoch, dec_rate=dec_rate, save_epoch=save_epoch)
 
     # 第二步训练
-    lr = 1e-5
-    gama_list = [0, 0, 1]
-    criterion = MixLoss(gama_list)
-    input_model, beta = train(input_model, input_device, criterion, model_path, csv_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height,
-                              beta=beta, dec_epoch=dec_epoch, dec_rate=dec_rate, save_epoch=save_epoch)
+    # lr = 1e-6
+    # gama_list = [0, 0, 1]
+    # criterion = MixLoss(gama_list)
+    # input_model, beta = train(input_model, input_device, criterion, model_path, csv_path, lr=lr, batch_size=batch_size, epoch=epoch, width=width, height=height,
+    #                           beta=beta, dec_epoch=dec_epoch, dec_rate=dec_rate, save_epoch=save_epoch)
 
     # 最终保存
     torch.save(input_model.state_dict(), model_path)
@@ -118,9 +112,9 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # 只能单GPU运行
 
     # 定义数据集名字
-    dataset_dict = {'tumor': r'./csv_data/tumor_test_data.csv', 'thrombus': r'./csv_data/thrombus_train_data.csv'}
-    # dataset_name = 'thrombus'
-    dataset_name = 'tumor'
+    dataset_dict = {'tumor': r'./csv_data/tumor_test_data.csv', 'thrombus': r'./csv_data/thrombus_test_data.csv'}
+    dataset_name = 'thrombus'
+    # dataset_name = 'tumor'
     csv_path = dataset_dict[dataset_name]
     checkpoint_folder = r'./checkpoints'
     # csv_path = r'./csv_data/thrombus_train_data.csv'
@@ -157,13 +151,13 @@ if __name__ == '__main__':
     # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # res2
-    # batch_size = 2
-    # model = DeepSupRes2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    # model_path=checkpoint_folder+'/'+model.__class__.__name__+'_'+dataset_name+'.pth'
-    # step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    batch_size = 2
+    model = DeepSupRes2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    model_path=checkpoint_folder+'/'+model.__class__.__name__+'_'+dataset_name+'.pth'
+    step_train(model, device, model_path,csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
 
     # AR2UNet3P
-    batch_size = 1
-    model = DeepSupAR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
-    model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
-    step_train(model, device, model_path, csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
+    # batch_size = 1
+    # model = DeepSupAR2UNet3P(in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True)
+    # model_path = checkpoint_folder + '/' + model.__class__.__name__ + '_' + dataset_name + '.pth'
+    # step_train(model, device, model_path, csv_path, batch_size=batch_size, epoch=epoch, width=width, height=height)
